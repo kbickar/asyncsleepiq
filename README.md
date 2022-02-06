@@ -1,20 +1,14 @@
+# AsyncSleepIQ
 
-AsyncSleepIQ
-==========
+AsyncSleepIQ is an library for accessing the SleepIQ API from Python. [SleepIQ](http://www.sleepnumber.com/sn/en/sleepiq-sleep-tracker)` is an addon for [SleepNumber beds] (http://www.sleepnumber.com/).
 
-AsyncSleepIQ is an library for accessing the SleepIQ API from Python. `SleepIQ <http://www.sleepnumber.com/sn/en/sleepiq-sleep-tracker>`__ is an addon for `SleepNumber beds <http://www.sleepnumber.com/>`__.
-
-Installation
------
+## Installation
 
 ```bash
-
-    pip install asyncsleepiq
-
+pip install asyncsleepiq
 ```
 
-Usage
------
+## Usage
 
 The library is structured with classes `SleepIQBed`, `SleepIQSleeper`, and `SleepIQFoundation` that get updated with data fetched through the API.
 
@@ -27,56 +21,55 @@ The `login()` function should only be called once when the program is started, t
 Here is a full example
 
 ```python
-    import asyncio
-    from asyncsleepiq import AsyncSleepIQ, LOGIN_KEY, LOGIN_COOKIE
-    
-    email = "user@example.com"
-    password = "passw0rd"
+import asyncio
+from asyncsleepiq import AsyncSleepIQ, LOGIN_KEY, LOGIN_COOKIE
 
-    async def main():        
-        api = AsyncSleepIQ(login_method=LOGIN_COOKIE)
+email = "user@example.com"
+password = "passw0rd"
 
-        print(f"Logging in as {email}...")
-        await api.login(email, password)
+async def main():        
+api = AsyncSleepIQ(login_method=LOGIN_COOKIE)
 
-        print("Initializing bed data...")
-        await api.init_beds()
-        await api.fetch_bed_statuses()
-        print("Beds:")
-        for bed in api.beds.values(): 
-            print(bed)
-        
-        bed = list(api.beds.values())[0]
-        await bed.fetch_pause_mode()
-        print (f"Pause mode: {bed.paused}")
-        await bed.set_pause_mode(not bed.paused)   
-        await bed.fetch_pause_mode()
-        print (f"New Pause mode: {bed.paused}") 
-        
-        print("Calibrating...")
-        await bed.calibrate()
-        print("Stopping pump...")
-        await bed.stop_pump()
-        
-    asyncio.get_event_loop().run_until_complete(main())
+print(f"Logging in as {email}...")
+await api.login(email, password)
 
-Available Data
------
+print("Initializing bed data...")
+await api.init_beds()
+await api.fetch_bed_statuses()
+print("Beds:")
+for bed in api.beds.values(): 
+    print(bed)
+
+bed = list(api.beds.values())[0]
+await bed.fetch_pause_mode()
+print (f"Pause mode: {bed.paused}")
+await bed.set_pause_mode(not bed.paused)   
+await bed.fetch_pause_mode()
+print (f"New Pause mode: {bed.paused}") 
+
+print("Calibrating...")
+await bed.calibrate()
+print("Stopping pump...")
+await bed.stop_pump()
+
+asyncio.get_event_loop().run_until_complete(main())
+```
+
+## Available Data
 
 The API varies greatly in what data is available based on the hardware capabilities.  Attempting to access data not supported will return a 404 error.  Most controls available on the web interface should be present, however some of those in the mobile app appear to communicate directly with the bed via bluetooth or WiFi and cannot be set, presumably for security reasons.
 
 
-Future Development
------
+## Future Development
 
 Without documentation for the API, development requires obvserving how other interfaces interact with it.  Given the hardware dependencies are fairly high, any future development requires someone with the appropriate bed to be able to obvserve and test against.  If you have a bed with other functionalities like lights which you would like supported, please submit a PR or get in touch and we can work to add it!
 
-Special Thanks
-------
+## Special Thanks
 
 Thanks to all the other people that have tried to dig into this API, especially the projects:
-https://github.com/technicalpickles/sleepyq (python)
-https://github.com/erichelgeson/sleepiq (swagger)
-https://github.com/DeeeeLAN/homebridge-sleepiq (javascript)
-https://bitbucket.org/Esity/sleepiq/ (ruby)
-https://javalibs.com/artifact/org.syphr/sleepiq-api (java)
+
+- https://github.com/technicalpickles/sleepyq (python)
+- https://github.com/erichelgeson/sleepiq (swagger)
+- https://github.com/DeeeeLAN/homebridge-sleepiq (javascript)
+- https://bitbucket.org/Esity/sleepiq/ (ruby)
+- https://javalibs.com/artifact/org.syphr/sleepiq-api (java)
