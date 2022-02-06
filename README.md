@@ -1,6 +1,6 @@
 # AsyncSleepIQ
 
-AsyncSleepIQ is an library for accessing the SleepIQ API from Python. [SleepIQ](http://www.sleepnumber.com/sn/en/sleepiq-sleep-tracker)` is an addon for [SleepNumber beds] (http://www.sleepnumber.com/).
+AsyncSleepIQ is an library for accessing the SleepIQ API from Python. [SleepIQ](http://www.sleepnumber.com/sn/en/sleepiq-sleep-tracker) is an addon for [SleepNumber beds](http://www.sleepnumber.com/).
 
 ## Installation
 
