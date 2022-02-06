@@ -1,4 +1,4 @@
-==========
+
 AsyncSleepIQ
 ==========
 
@@ -7,9 +7,11 @@ AsyncSleepIQ is an library for accessing the SleepIQ API from Python. `SleepIQ <
 Installation
 -----
 
-.. code:: bash
+```bash
 
     pip install asyncsleepiq
+
+```
 
 Usage
 -----
@@ -24,7 +26,7 @@ The `login()` function should only be called once when the program is started, t
 
 Here is a full example
 
-.. code:: python
+```python
     import asyncio
     from asyncsleepiq import AsyncSleepIQ, LOGIN_KEY, LOGIN_COOKIE
     
