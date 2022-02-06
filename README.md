@@ -28,29 +28,29 @@ email = "user@example.com"
 password = "passw0rd"
 
 async def main():        
-api = AsyncSleepIQ(login_method=LOGIN_COOKIE)
+    api = AsyncSleepIQ(login_method=LOGIN_COOKIE)
 
-print(f"Logging in as {email}...")
-await api.login(email, password)
+    print(f"Logging in as {email}...")
+    await api.login(email, password)
 
-print("Initializing bed data...")
-await api.init_beds()
-await api.fetch_bed_statuses()
-print("Beds:")
-for bed in api.beds.values(): 
-    print(bed)
+    print("Initializing bed data...")
+    await api.init_beds()
+    await api.fetch_bed_statuses()
+    print("Beds:")
+    for bed in api.beds.values(): 
+        print(bed)
 
-bed = list(api.beds.values())[0]
-await bed.fetch_pause_mode()
-print (f"Pause mode: {bed.paused}")
-await bed.set_pause_mode(not bed.paused)   
-await bed.fetch_pause_mode()
-print (f"New Pause mode: {bed.paused}") 
+    bed = list(api.beds.values())[0]
+    await bed.fetch_pause_mode()
+    print (f"Pause mode: {bed.paused}")
+    await bed.set_pause_mode(not bed.paused)   
+    await bed.fetch_pause_mode()
+    print (f"New Pause mode: {bed.paused}") 
 
-print("Calibrating...")
-await bed.calibrate()
-print("Stopping pump...")
-await bed.stop_pump()
+    print("Calibrating...")
+    await bed.calibrate()
+    print("Stopping pump...")
+    await bed.stop_pump()
 
 asyncio.get_event_loop().run_until_complete(main())
 ```
