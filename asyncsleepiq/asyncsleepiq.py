@@ -171,9 +171,9 @@ class AsyncSleepIQ:
             sleeper.active = sleeper_data['active']
             
         # init foundations
-        #for bed in self.beds.values():
-        #    await bed.foundation.update_features()
-        #    await bed.foundation.init_lights()
+        for bed in self.beds.values():
+            await bed.foundation.fetch_features()
+            await bed.foundation.init_lights()
         
     # update statuses of sleepers/beds
     async def fetch_bed_statuses(self):
