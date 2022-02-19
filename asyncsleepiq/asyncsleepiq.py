@@ -123,6 +123,10 @@ class AsyncSleepIQ:
                     body=resp.text,
                 ))           
 
+    async def close_session(self):
+        if self._session:
+            await self._session.close()
+
     async def put(self, url, data="", params={}):
         await self.__make_request(self._session.put, url, data, params)
         
