@@ -82,7 +82,7 @@ class AsyncSleepIQ:
         ) as resp:
 
             if resp.status == 401:
-                raise SleepIQLoginException("Incorect username or password")
+                raise SleepIQLoginException("Incorrect username or password")
             if resp.status == 403:
                 raise SleepIQLoginException("User Agent is blocked. May need to update GenUserAgent data?")
             if resp.status not in (200, 201):
