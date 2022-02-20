@@ -1,49 +1,69 @@
-from .sleeper import *
-from .consts import *
+from .consts import BED_LIGHTS, BED_PRESETS, FOUNDATION_TYPES, MASSAGE_MODE, MASSAGE_SPEED
+from .actuator import SleepIQActuator
+from .light import SleepIQLight
 
 class SleepIQFoundation:
     def __init__(self, api, bed_id):
         self._api = api
         self.bed_id = bed_id
-        self.lights = {}
+        self.lights = []
         self.features = {}
         self.type = None
+        self.actuators = []
+        self.isMoving = False
+        self.preset = ""
         
     def __str__(self):
-        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)})" 
+        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)}, actuators: {len(self.actuators)})" 
     def __repr__(self):
-        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)})" 
+        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)}, actuators: {len(self.actuators)})" 
         
     async def init_lights(self):
         for light in BED_LIGHTS:
-            params = {'outletId': light}
-            exists = await self._api.check('bed/'+self.bed_id+'/foundation/outlet', params=params)
+            exists = await self._api.check(f"bed/{self.bed_id}/foundation/outlet", params={"outletId": light})
             if exists:
-                await self.fetch_light(light)
-        
-    # fetch states for all lights
-    async def fetch_lights(self):
+                self.lights.append(SleepIQLight(self._api, self.bed_id, light))
+        await self.update_lights()
+
+    async def update_lights(self):
         for light in self.lights:
-            await self.fetch_light(light)
+            await light.update()
 
-    # Set light 1-4 on/off
-    async def set_light(self, light, on):
-        if light not in BED_LIGHTS:
-            raise ValueError("Invalid light")
-            
-        data = {'outletId': light, 'setting': 1 if on else 0}
-        await self._api.put('bed/'+self.bed_id+'/foundation/outlet', data)
+    async def init_actuators(self):
+        if not self.type:
+            return
+        data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
+        self.isMoving = data["fsIsMoving"]
 
-    # fetch state for light
-    async def fetch_light(self, light):
-        if light not in BED_LIGHTS:
-            raise ValueError("Invalid light")
-        params = {'outletId': light}
-        status = await self._api.get('bed/'+self.bed_id+'/foundation/outlet', params=params)
-        self.lights[light] = status
+        if self.type in ["single", "easternKing"]:
+            self.actuators = [
+                SleepIQActuator(self._api, self.bed_id, None, 0),
+                SleepIQActuator(self._api, self.bed_id, None, 1)
+            ]
+        elif self.type == "splitHead":
+            self.actuators = [
+                SleepIQActuator(self._api, self.bed_id, 0, 0),
+                SleepIQActuator(self._api, self.bed_id, 1, 0),
+                SleepIQActuator(self._api, self.bed_id, None, 1)
+            ]
+        else:
+            self.actuators = [
+                SleepIQActuator(self._api, self.bed_id, 0, 0),
+                SleepIQActuator(self._api, self.bed_id, 1, 0),
+                SleepIQActuator(self._api, self.bed_id, 0, 1),
+                SleepIQActuator(self._api, self.bed_id, 1, 1)
+            ]
 
-    async def foundation_status(self):
-        return await self._api.get('bed/'+self.bed_id+'/foundation/status')
+        for actuator in self.actuators:
+            await actuator.update(data)
+
+    async def update_actuators(self):
+        if not self.type:
+            return
+        data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
+        self.isMoving = data["fsIsMoving"]
+        for actuator in self.actuators:
+            await actuator.update(data)
 
     async def fetch_features(self):
         have_foundation = await self._api.check('bed/'+self.bed_id+'/foundation/system')
@@ -65,7 +85,7 @@ class SleepIQFoundation:
 
         if 'hasMassageAndLight' in self.features:
             self.features['hasUnderbedLight'] = True
-        if 'splitKing' in self.features or 'splitHead' in self.features:
+        if 'split' in self.type:
             self.features['boardIsASingle'] = False
             
         
@@ -104,22 +124,3 @@ class SleepIQFoundation:
                 'massageWaveMode':mode,
                 'side':side}
         await self._api.put('bed/'+self.bed_id+'/foundation/adjustment', data)
-
-
-    async def set_foundation_position(self, side, actuator, position, slowSpeed=False):
-        #
-        # actuator "H" or "F" (head or foot)
-        # position 0-100
-        # slowSpeed False=fast, True=slow
-        #
-        if 0 > position or position > 100:
-            raise ValueError("Invalid position, must be between 0 and 100")
-        if actuator.lower() in ('h', 'head'):
-            actuator = 'H'
-        elif actuator.lower() in ('f', 'foot'):
-            actuator = 'F'
-        else:
-            raise ValueError("Actuator must be one of the following: head, foot, H or F")
-        data = {'position':position,'side':side,'actuator':actuator,'speed':1 if slowSpeed else 0}
-        await self._api.put('bed/'+self.bed_id+'/foundation/adjustment/micro', data)
-        
