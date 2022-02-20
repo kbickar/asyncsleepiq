@@ -177,6 +177,7 @@ class AsyncSleepIQ:
         # init foundations
         for bed in self.beds.values():
             await bed.foundation.fetch_features()
+            await bed.foundation.init_actuators()
             await bed.foundation.init_lights()
         
     # update statuses of sleepers/beds
@@ -188,5 +189,3 @@ class AsyncSleepIQ:
                 self.beds[bed_status['bedId']].sleepers[i].in_bed = bed_status[side+'Side']['isInBed']
                 self.beds[bed_status['bedId']].sleepers[i].pressure = bed_status[side+'Side']['pressure']
                 self.beds[bed_status['bedId']].sleepers[i].sleep_number = bed_status[side+'Side']['sleepNumber']
-        
-        

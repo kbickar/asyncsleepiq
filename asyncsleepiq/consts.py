@@ -59,3 +59,6 @@ SIDES = ['L', 'R']
 SIDES_FULL= ['Left', 'Right']
 
 FOUNDATION_TYPES = ['single', 'splitHead', 'splitKing','easternKing']
+
+ACTUATORS = ['H', 'F']
+ACTUATORS_FULL = ['Head', 'Foot']
