@@ -136,12 +136,12 @@ class AsyncSleepIQ:
     async def check(self, url, data="", params={}):
         return await self.__make_request(self._session.get, url, data, params, check=True)
     
-    async def __make_request(self, make_request, url, data="", params={}, retry=True, check=False):
+    async def __make_request(self, make_request, url, json={}, params={}, retry=True, check=False):
         timeout = aiohttp.ClientTimeout(total=TIMEOUT)
         params['_k'] = self._key
         try:
             async with make_request(
-                API_URL + "/" + url, headers=self._headers, timeout=timeout, data=data, params=params
+                API_URL + "/" + url, headers=self._headers, timeout=timeout, json=json, params=params
             ) as resp:
                 if resp.status != 200:
                     if resp.status == 404 and check:
@@ -150,7 +150,7 @@ class AsyncSleepIQ:
                     if retry and resp.status in (401, 404):
                         # login and try again
                         await self.login()
-                        return await self.__make_request(make_request, url, data, params, False)
+                        return await self.__make_request(make_request, url, json, params, False)
                     raise SleepIQAPIException(f"API call error response {resp.status}\n{resp.text}")
                 if check:
                     return True
