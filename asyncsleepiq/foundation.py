@@ -19,12 +19,12 @@ class SleepIQFoundation:
             params = {'outletId': light}
             exists = await self._api.check('bed/'+self.bed_id+'/foundation/outlet', params=params)
             if exists:
-                get_light(self, light)
+                await self.fetch_light(light)
         
     # fetch states for all lights
     async def fetch_lights(self):
-        for light in lights:
-            await get_light(self, light)
+        for light in self.lights:
+            await self.fetch_light(light)
 
     # Set light 1-4 on/off
     async def set_light(self, light, on):
@@ -52,26 +52,26 @@ class SleepIQFoundation:
            return           
                 
         fs = await self._api.get('bed/'+self.bed_id+'/foundation/system')
-        features_flags = getattr(fs, 'fsBoardFeatures')
+        features_flags = fs.get('fsBoardFeatures')
         self.features['boardIsASingle'] = features_flags & (1 < 0)
         self.features['hasMassageAndLight'] = features_flags & (1 < 1)
         self.features['hasFootControl'] = features_flags & (1 < 2)
         self.features['hasFootWarming'] = features_flags & (1 < 3)
         self.features['hasUnderbedLight'] = features_flags & (1 < 4)
-        self.type = FOUNDATION_TYPES[getattr(fs, 'fsBedType')]
+        self.type = FOUNDATION_TYPES[fs.get('fsBedType')]
         
-        self.features['leftUnderbedLightPMW'] = getattr(fs, 'fsLeftUnderbedLightPWM')
-        self.features['rightUnderbedLightPMW'] = getattr(fs, 'fsRightUnderbedLightPWM')
+        self.features['leftUnderbedLightPMW'] = fs.get('fsLeftUnderbedLightPWM')
+        self.features['rightUnderbedLightPMW'] = fs.get('fsRightUnderbedLightPWM')
 
-        if self.features['hasMassageAndLight']:
+        if 'hasMassageAndLight' in self.features:
             self.features['hasUnderbedLight'] = True
-        if self.features['splitKing'] or features['splitHead']:
+        if 'splitKing' in self.features or 'splitHead' in self.features:
             self.features['boardIsASingle'] = False
             
         
     async def stop_motion(self, side):
         data = {"footMotion":1, "headMotion":1, "massageMotion":1, "side":side}
-        await api.put('bed/'+self.bed_id+'/foundation/motion', data)
+        await self._api.put('bed/'+self.bed_id+'/foundation/motion', data)
 
     async def set_preset(self, side, preset, slowSpeed=False):
         #
@@ -82,7 +82,7 @@ class SleepIQFoundation:
             raise ValueError("Invalid preset")
             
         data = {'preset':preset,'side':side,'speed':1 if slowSpeed else 0}
-        await api.put('bed/'+self.bed_id+'/foundation/preset', data)
+        await self._api.put('bed/'+self.bed_id+'/foundation/preset', data)
 
     async def set_foundation_massage(self, side, footSpeed, headSpeed, timer=0, mode=0):
         #
@@ -103,7 +103,7 @@ class SleepIQFoundation:
                 'massageTimer':timer,
                 'massageWaveMode':mode,
                 'side':side}
-        await api.put('bed/'+self.bed_id+'/foundation/adjustment', data)
+        await self._api.put('bed/'+self.bed_id+'/foundation/adjustment', data)
 
 
     async def set_foundation_position(self, side, actuator, position, slowSpeed=False):
@@ -121,5 +121,5 @@ class SleepIQFoundation:
         else:
             raise ValueError("Actuator must be one of the following: head, foot, H or F")
         data = {'position':position,'side':side,'actuator':actuator,'speed':1 if slowSpeed else 0}
-        await api.put('bed/'+self.bed_id+'/foundation/adjustment/micro', data)
+        await self._api.put('bed/'+self.bed_id+'/foundation/adjustment/micro', data)
         

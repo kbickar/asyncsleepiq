@@ -82,7 +82,7 @@ class AsyncSleepIQ:
         ) as resp:
 
             if resp.status == 401:
-                raise SleepIQLoginException("Incorect username or password")
+                raise SleepIQLoginException("Incorrect username or password")
             if resp.status == 403:
                 raise SleepIQLoginException("User Agent is blocked. May need to update GenUserAgent data?")
             if resp.status not in (200, 201):
@@ -122,6 +122,10 @@ class AsyncSleepIQ:
                     code=resp.status,
                     body=resp.text,
                 ))           
+
+    async def close_session(self):
+        if self._session:
+            await self._session.close()
 
     async def put(self, url, data="", params={}):
         await self.__make_request(self._session.put, url, data, params)
