@@ -55,14 +55,9 @@ async def main():
 asyncio.get_event_loop().run_until_complete(main())
 ```
 
-## Available Data
-
-The API varies greatly in what data is available based on the hardware capabilities.  Attempting to access data not supported will return a 404 error.  Most controls available on the web interface should be present, however some of those in the mobile app appear to communicate directly with the bed via bluetooth or WiFi and cannot be set, presumably for security reasons.
-
-
 ## Future Development
 
-Without documentation for the API, development requires obvserving how other interfaces interact with it.  Given the hardware dependencies are fairly high, any future development requires someone with the appropriate bed to be able to obvserve and test against.  If you have a bed with other functionalities like lights which you would like supported, please submit a PR or get in touch and we can work to add it!
+Without documentation for the API, development requires obvserving how other interfaces interact with it.  Given the hardware dependencies are fairly high, any future development requires someone with the appropriate bed to be able to obvserve and test against.
 
 ## Special Thanks
 
