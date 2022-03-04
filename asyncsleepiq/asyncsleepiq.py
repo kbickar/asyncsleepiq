@@ -53,6 +53,8 @@ class AsyncSleepIQ(SleepIQAPI):
             if bed_status["bedId"] not in self.beds:
                 continue
             for i, side in enumerate(["left", "right"]):
+                if bed_status[side+'Side'] is None:
+                    continue
                 self.beds[bed_status["bedId"]].sleepers[i].in_bed = bed_status[
                     side + "Side"
                 ]["isInBed"]
