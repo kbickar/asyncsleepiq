@@ -52,13 +52,9 @@ class AsyncSleepIQ(SleepIQAPI):
         for bed_status in data["beds"]:
             if bed_status["bedId"] not in self.beds:
                 continue
-            for i, side in enumerate(["left", "right"]):
-                self.beds[bed_status["bedId"]].sleepers[i].in_bed = bed_status[
-                    side + "Side"
-                ]["isInBed"]
-                self.beds[bed_status["bedId"]].sleepers[i].pressure = bed_status[
-                    side + "Side"
-                ]["pressure"]
-                self.beds[bed_status["bedId"]].sleepers[i].sleep_number = bed_status[
-                    side + "Side"
-                ]["sleepNumber"]
+            for sleeper in self.beds[bed_status["bedId"]].sleepers:
+                sleeper_data = bed_status.get(sleeper.side_full.lower() + "Side")
+                if sleeper_data:
+                    sleeper.in_bed = sleeper_data["isInBed"]
+                    sleeper.pressure = sleeper_data["pressure"]
+                    sleeper.sleep_number = sleeper_data["sleepNumber"]

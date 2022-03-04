@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from .api import SleepIQAPI
+from .consts import SIDES_FULL
 from .foundation import SleepIQFoundation
 from .sleeper import SleepIQSleeper
 
@@ -20,8 +21,9 @@ class SleepIQBed:
         self.mac_addr = data["macAddress"]
         self.paused = False
         self.sleepers = [
-            SleepIQSleeper(api, self.id, data["sleeperLeftId"], 0),
-            SleepIQSleeper(api, self.id, data["sleeperRightId"], 1),
+            SleepIQSleeper(api, self.id, data[f"sleeper{side}Id"], side)
+            for side in SIDES_FULL
+            if data.get(f"sleeper{side}Id")
         ]
         self.foundation = SleepIQFoundation(api, self.id)
 
