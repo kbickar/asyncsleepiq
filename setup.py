@@ -7,6 +7,7 @@ def readme():
 
 setup(name='asyncsleepiq',
       packages=['asyncsleepiq'],
+      package_data={'asyncsleepiq': ['py.typed']},
       version=asyncsleepiq.__version__,
       description='ASync SleepIQ API',
       long_description=readme(),
@@ -16,7 +17,7 @@ setup(name='asyncsleepiq',
       author_email='trumpetgod@gmail.com',
       license='MIT',
       install_requires=[
-          'aiohttp;python_version>="3.5"',
+          'aiohttp;python_version>="3.7"',
       ],
       classifiers = [
           'Programming Language :: Python :: 3',
