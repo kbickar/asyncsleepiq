@@ -10,4 +10,4 @@ from .exceptions import (
 from .foundation import SleepIQFoundation
 from .sleeper import SleepIQSleeper
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
