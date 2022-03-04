@@ -1,5 +1,6 @@
 """Async SleepIQ API Library."""
 from .asyncsleepiq import AsyncSleepIQ
+from .actuator import SleepIQActuator
 from .bed import SleepIQBed
 from .consts import *
 from .exceptions import (
@@ -8,6 +9,7 @@ from .exceptions import (
     SleepIQTimeoutException,
 )
 from .foundation import SleepIQFoundation
+from .light import SleepIQLight
 from .sleeper import SleepIQSleeper
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
