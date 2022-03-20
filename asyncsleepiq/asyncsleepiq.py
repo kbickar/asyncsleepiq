@@ -42,8 +42,7 @@ class AsyncSleepIQ(SleepIQAPI):
         # init foundations
         for bed in self.beds.values():
             await bed.foundation.fetch_features()
-            await bed.foundation.init_actuators()
-            await bed.foundation.init_lights()
+            await bed.foundation.init_features()
 
     # update statuses of sleepers/beds
     async def fetch_bed_statuses(self) -> None:

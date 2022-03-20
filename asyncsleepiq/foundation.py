@@ -13,6 +13,7 @@ from .consts import (
     MASSAGE_SPEED,
 )
 from .light import SleepIQLight
+from .preset import SleepIQPreset
 
 
 class SleepIQFoundation:
@@ -27,15 +28,38 @@ class SleepIQFoundation:
         self.type = ""
         self.actuators: list[SleepIQActuator] = []
         self.is_moving = False
-        self.preset = ""
+        self.presets: list[SleepIQPreset] = []
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)}, actuators: {len(self.actuators)})"
+        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)}, actuators: {len(self.actuators)}, presets: {len(self.presets)})"
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)}, actuators: {len(self.actuators)})"
+        return f"SleepIQFoundation[{self.type}](lights: {len(self.lights)}, features: {len(self.features)}, actuators: {len(self.actuators)}, presets: {len(self.presets)})"
+
+    async def init_features(self) -> None:
+        """Initialize all foundation features."""
+        await self.init_lights()
+
+        if not self.type:
+            return
+
+        data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
+        await self.init_actuators(data)
+        await self.init_presets(data)
+
+    async def update_foundation_status(self) -> None:
+        """Update all foundation data from API."""
+        await self.update_lights()
+
+        if not self.type:
+            return
+
+        data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
+        
+        await self.update_actuators(data)
+        await self.update_presets(data)
 
     async def init_lights(self) -> None:
         """Initialize list of lights available on foundation."""
@@ -52,11 +76,8 @@ class SleepIQFoundation:
         for light in self.lights:
             await light.update()
 
-    async def init_actuators(self) -> None:
+    async def init_actuators(self, data: dict[str, Any]) -> None:
         """Initialize list of actuators available on foundation."""
-        if not self.type:
-            return
-        data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
         self.is_moving = data["fsIsMoving"]
 
         if self.type in ["single", "easternKing"]:
@@ -64,6 +85,7 @@ class SleepIQFoundation:
                 SleepIQActuator(self._api, self.bed_id, None, 0),
                 SleepIQActuator(self._api, self.bed_id, None, 1),
             ]
+            self.presets = [SleepIQPreset(self._api, self.bed_id, 0)]
         elif self.type == "splitHead":
             self.actuators = [
                 SleepIQActuator(self._api, self.bed_id, 0, 0),
@@ -78,17 +100,30 @@ class SleepIQFoundation:
                 SleepIQActuator(self._api, self.bed_id, 1, 1),
             ]
 
-        for actuator in self.actuators:
-            await actuator.update(data)
+        await self.update_actuators(data)
 
-    async def update_actuators(self) -> None:
+    async def init_presets(self, data: dict[str, Any]) -> None:
+        """Initialize list of presets available on foundation."""
+        if self.type in ["single", "easternKing"]:
+            self.presets = [SleepIQPreset(self._api, self.bed_id, None)]
+        else:
+            self.presets = [
+                SleepIQPreset(self._api, self.bed_id, 0),
+                SleepIQPreset(self._api, self.bed_id, 1)
+            ]
+
+        await self.update_presets(data)
+
+    async def update_actuators(self, data: dict[str, Any]) -> None:
         """Update actuator states from API."""
-        if not self.type:
-            return
-        data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
         self.is_moving = data["fsIsMoving"]
         for actuator in self.actuators:
             await actuator.update(data)
+
+    async def update_presets(self, data: dict[str, Any]) -> None:
+        """Update actuator states from API."""
+        for preset in self.presets:
+            await preset.update(data)
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""
@@ -124,20 +159,6 @@ class SleepIQFoundation:
         """Stop motion on L or R side of bed."""
         data = {"footMotion": 1, "headMotion": 1, "massageMotion": 1, "side": side}
         await self._api.put("bed/" + self.bed_id + "/foundation/motion", data)
-
-    async def set_preset(
-        self, side: str, preset: int, slow_speed: bool = False
-    ) -> None:
-        """Set foundation preset."""
-        #
-        # preset 1-6
-        # slowSpeed False=fast, True=slow
-        #
-        if preset not in BED_PRESETS:
-            raise ValueError("Invalid preset")
-
-        data = {"preset": preset, "side": side, "speed": 1 if slow_speed else 0}
-        await self._api.put("bed/" + self.bed_id + "/foundation/preset", data)
 
     async def set_foundation_massage(
         self, side: str, foot_speed: int, head_speed: int, timer: int = 0, mode: int = 0
