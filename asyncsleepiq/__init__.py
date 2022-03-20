@@ -10,6 +10,7 @@ from .exceptions import (
 )
 from .foundation import SleepIQFoundation
 from .light import SleepIQLight
+from .preset import SleepIQPreset
 from .sleeper import SleepIQSleeper
 
-__version__ = "1.1.2"
+__version__ = "1.2.0"
