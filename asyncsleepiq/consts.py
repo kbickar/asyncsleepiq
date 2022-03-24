@@ -20,7 +20,17 @@ FLAT = 4
 ZERO_G = 5
 SNORE = 6
 
-BED_PRESETS = [FAVORITE, READ, WATCH_TV, FLAT, ZERO_G, SNORE]
+NO_PRESET = "Not at preset"
+
+BED_PRESETS = {
+    NO_PRESET: 0,
+    "Favorite": FAVORITE,
+    "Read": READ,
+    "Watch TV": WATCH_TV,
+    "Flat": FLAT,
+    "Zero G": ZERO_G,
+    "Snore": SNORE,
+}
 
 OFF = 0
 LOW = 1
