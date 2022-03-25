@@ -7,7 +7,6 @@ from .actuator import SleepIQActuator
 from .api import SleepIQAPI
 from .consts import (
     BED_LIGHTS,
-    BED_PRESETS,
     FOUNDATION_TYPES,
     MASSAGE_MODE,
     MASSAGE_SPEED,

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 from .api import SleepIQAPI
-from .consts import BED_PRESETS, SIDES, SIDES_FULL
+from .consts import BED_PRESETS, NO_PRESET, SIDES, SIDES_FULL
 
 class SleepIQPreset:
     """Foundation preset setting from SleepIQ API."""
@@ -24,16 +24,18 @@ class SleepIQPreset:
         """Return string representation."""
         return f"SleepIQPreset[{self.side}](preset={self.preset})"
 
-    async def set_preset(self, preset: int, slow_speed: bool = False) -> None:
+    async def set_preset(self, preset: str, slow_speed: bool = False) -> None:
         """Set foundation preset."""
         #
         # preset 1-6
         # slowSpeed False=fast, True=slow
         #
+        if preset == NO_PRESET:
+            return
         if preset not in BED_PRESETS:
             raise ValueError("Invalid preset")
         data = {
-            "preset": preset, 
+            "preset": BED_PRESETS[preset], 
             "side": self.side if self.side else "R", 
             "speed": 1 if slow_speed else 0
         }
