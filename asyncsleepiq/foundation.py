@@ -8,8 +8,12 @@ from .api import SleepIQAPI
 from .consts import (
     BED_LIGHTS,
     FOUNDATION_TYPES,
-    MASSAGE_MODE,
-    MASSAGE_SPEED,
+    MASSAGE_MODES,
+    MASSAGE_SPEEDS,
+    End,
+    Mode,
+    Side,
+    Speed,
 )
 from .light import SleepIQLight
 from .preset import SleepIQPreset
@@ -81,22 +85,22 @@ class SleepIQFoundation:
 
         if self.type in ["single", "easternKing"]:
             self.actuators = [
-                SleepIQActuator(self._api, self.bed_id, None, 0),
-                SleepIQActuator(self._api, self.bed_id, None, 1),
+                SleepIQActuator(self._api, self.bed_id, Side.NONE, End.HEAD),
+                SleepIQActuator(self._api, self.bed_id, Side.NONE, End.FOOT),
             ]
-            self.presets = [SleepIQPreset(self._api, self.bed_id, 0)]
+            self.presets = [SleepIQPreset(self._api, self.bed_id, Side.NONE)]
         elif self.type == "splitHead":
             self.actuators = [
-                SleepIQActuator(self._api, self.bed_id, 0, 0),
-                SleepIQActuator(self._api, self.bed_id, 1, 0),
-                SleepIQActuator(self._api, self.bed_id, None, 1),
+                SleepIQActuator(self._api, self.bed_id, Side.LEFT, End.HEAD),
+                SleepIQActuator(self._api, self.bed_id, Side.RIGHT, End.HEAD),
+                SleepIQActuator(self._api, self.bed_id, Side.NONE, End.FOOT),
             ]
         else:
             self.actuators = [
-                SleepIQActuator(self._api, self.bed_id, 0, 0),
-                SleepIQActuator(self._api, self.bed_id, 1, 0),
-                SleepIQActuator(self._api, self.bed_id, 0, 1),
-                SleepIQActuator(self._api, self.bed_id, 1, 1),
+                SleepIQActuator(self._api, self.bed_id, Side.LEFT, End.HEAD),
+                SleepIQActuator(self._api, self.bed_id, Side.RIGHT, End.HEAD),
+                SleepIQActuator(self._api, self.bed_id, Side.LEFT, End.FOOT),
+                SleepIQActuator(self._api, self.bed_id, Side.RIGHT, End.FOOT),
             ]
 
         await self.update_actuators(data)
@@ -104,11 +108,11 @@ class SleepIQFoundation:
     async def init_presets(self, data: dict[str, Any]) -> None:
         """Initialize list of presets available on foundation."""
         if self.type in ["single", "easternKing"]:
-            self.presets = [SleepIQPreset(self._api, self.bed_id, None)]
+            self.presets = [SleepIQPreset(self._api, self.bed_id, Side.NONE)]
         else:
             self.presets = [
-                SleepIQPreset(self._api, self.bed_id, 0),
-                SleepIQPreset(self._api, self.bed_id, 1)
+                SleepIQPreset(self._api, self.bed_id, Side.LEFT),
+                SleepIQPreset(self._api, self.bed_id, Side.RIGHT)
             ]
 
         await self.update_presets(data)
@@ -160,21 +164,12 @@ class SleepIQFoundation:
         await self._api.put("bed/" + self.bed_id + "/foundation/motion", data)
 
     async def set_foundation_massage(
-        self, side: str, foot_speed: int, head_speed: int, timer: int = 0, mode: int = 0
+        self, side: str, foot_speed: Speed, head_speed: Speed, timer: int = 0, mode: Mode = Mode.OFF
     ) -> None:
         """Set massage mode."""
-        #
-        # foot_speed 0-3
-        # head_speed 0-3
-        # mode 0-3
-        #
-        if mode not in MASSAGE_MODE:
-            raise ValueError("Invalid mode")
-        if mode != 0:
-            foot_speed = 0
-            head_speed = 0
-        if not all(speed in MASSAGE_SPEED for speed in (foot_speed, head_speed)):
-            raise ValueError("Invalid head or foot speed")
+        if mode != Mode.OFF:
+            foot_speed = Speed.OFF
+            head_speed = Speed.OFF
 
         data = {
             "footMassageMotor": foot_speed,

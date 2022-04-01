@@ -21,9 +21,9 @@ class SleepIQBed:
         self.mac_addr = data["macAddress"]
         self.paused = False
         self.sleepers = [
-            SleepIQSleeper(api, self.id, data[f"sleeper{side}Id"], side)
+            SleepIQSleeper(api, self.id, data[f"sleeper{SIDES_FULL[side]}Id"], side)
             for side in SIDES_FULL
-            if data.get(f"sleeper{side}Id")
+            if data.get(f"sleeper{SIDES_FULL[side]}Id")
         ]
         self.foundation = SleepIQFoundation(api, self.id)
 

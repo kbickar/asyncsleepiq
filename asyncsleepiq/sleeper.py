@@ -2,20 +2,21 @@
 from __future__ import annotations
 
 from .api import SleepIQAPI
+from .consts import SIDES_FULL, Side
 
 
 class SleepIQSleeper:
     """Sleeper representation for SleepIQ API."""
 
     def __init__(
-        self, api: SleepIQAPI, bed_id: str, sleeper_id: str, side: str
+        self, api: SleepIQAPI, bed_id: str, sleeper_id: str, side: Side
     ) -> None:
         """Initialize sleeper object."""
         self.api = api
         self.bed_id = bed_id
         self.sleeper_id = sleeper_id
-        self.side = side[0]
-        self.side_full = side
+        self.side = side
+        self.side_full = SIDES_FULL[side]
         self.active = False
         self.name = ""
 

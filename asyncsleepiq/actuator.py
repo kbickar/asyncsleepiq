@@ -4,21 +4,21 @@ from __future__ import annotations
 from typing import Any
 
 from .api import SleepIQAPI
-from .consts import ACTUATORS, ACTUATORS_FULL, SIDES, SIDES_FULL
+from .consts import ACTUATORS_FULL, SIDES_FULL, End, Side
 
 
 class SleepIQActuator:
     """Actuator representation for SleepIQ API."""
 
     def __init__(
-        self, api: SleepIQAPI, bed_id: str, side: int | None, actuator: int
+        self, api: SleepIQAPI, bed_id: str, side: Side, actuator: End
     ) -> None:
         """Initialize actuator object."""
         self._api = api
         self.bed_id = bed_id
-        self.side = SIDES[side] if side else None
-        self.side_full = SIDES_FULL[side] if side else None
-        self.actuator = ACTUATORS[actuator]
+        self.side = side
+        self.side_full = SIDES_FULL[side]
+        self.actuator = actuator
         self.actuator_full = ACTUATORS_FULL[actuator]
         self.position = 0
 
@@ -38,7 +38,7 @@ class SleepIQActuator:
             return
         data = {
             "position": position,
-            "side": self.side if self.side else "R",
+            "side": self.side,
             "actuator": self.actuator,
             "speed": 1 if slow_speed else 0,
         }
@@ -46,10 +46,6 @@ class SleepIQActuator:
 
     async def update(self, data: dict[str, Any]) -> None:
         """Update the position of an actuator from the API."""
-        # For non-split actuators, it doesn't matter which side we get the
-        # value from, it'll always be the same for either
-        side_full = self.side_full if self.side_full else "Right"
-
         # The API reports position in hex, but is set with an integer.
         # We'll always show position with an integer value.
-        self.position = int(data[f"fs{side_full}{self.actuator_full}Position"], 16)
+        self.position = int(data[f"fs{self.side_full}{self.actuator_full}Position"], 16)

@@ -1,4 +1,5 @@
 """Constants for SleepIQ API Package."""
+import enum
 
 API_URL = "https://prod-api.sleepiq.sleepnumber.com/rest"
 TIMEOUT = 10
@@ -44,10 +45,16 @@ REVITILIZE = 2
 WAVE = 3
 
 MASSAGE_MODE = [OFF, SOOTHE, REVITILIZE, WAVE]
-SIDES = ["L", "R"]
-SIDES_FULL = ["Left", "Right"]
+
+class Side(str, enum.Enum):
+    LEFT = "L"
+    RIGHT = "R"
+    NONE = "R"
+SIDES_FULL = {Side.LEFT: "Left", Side.RIGHT: "Right"}
 
 FOUNDATION_TYPES = ["single", "splitHead", "splitKing", "easternKing"]
 
-ACTUATORS = ["H", "F"]
-ACTUATORS_FULL = ["Head", "Foot"]
+class End(str, enum.Enum):
+    HEAD = "H"
+    FOOT = "F"
+ACTUATORS_FULL = {End.HEAD: "Head", End.FOOT: "Foot"}
