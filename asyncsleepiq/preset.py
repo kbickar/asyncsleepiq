@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 from .api import SleepIQAPI
-from .consts import BED_PRESETS, NO_PRESET, SIDES_FULL, Side
+from .consts import BED_PRESETS, NO_PRESET, SIDES_FULL, SIDES_SHORT, Side
 
 class SleepIQPreset:
     """Foundation preset setting from SleepIQ API."""
@@ -36,7 +36,7 @@ class SleepIQPreset:
             raise ValueError("Invalid preset")
         data = {
             "preset": BED_PRESETS[preset], 
-            "side": self.side,
+            "side": SIDES_SHORT[self.side],
             "speed": 1 if slow_speed else 0
         }
         await self._api.put("bed/" + self.bed_id + "/foundation/preset", data)

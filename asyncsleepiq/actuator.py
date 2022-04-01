@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from .api import SleepIQAPI
-from .consts import ACTUATORS_FULL, SIDES_FULL, End, Side
+from .consts import ACTUATORS_FULL, SIDES_FULL, SIDES_SHORT, End, Side
 
 
 class SleepIQActuator:
@@ -24,11 +24,11 @@ class SleepIQActuator:
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"SleepIQActuator[{self.actuator_full} {self.side_full}], position={self.position}"
+        return f"SleepIQActuator[{self.actuator_full} {self.side}], position={self.position}"
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f"SleepIQActuator[{self.actuator_full} {self.side_full}], position={self.position}"
+        return f"SleepIQActuator[{self.actuator_full} {self.side}], position={self.position}"
 
     async def set_position(self, position: int, slow_speed: bool = False) -> None:
         """Set the position of an actuator through the API."""
@@ -38,7 +38,7 @@ class SleepIQActuator:
             return
         data = {
             "position": position,
-            "side": self.side,
+            "side": SIDES_SHORT[self.side],
             "actuator": self.actuator,
             "speed": 1 if slow_speed else 0,
         }

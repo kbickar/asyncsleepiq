@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .api import SleepIQAPI
-from .consts import SIDES_FULL, Side
+from .consts import SIDES_FULL, SIDES_SHORT, Side
 
 
 class SleepIQSleeper:
@@ -42,7 +42,10 @@ class SleepIQSleeper:
         if 0 > setting or setting > 100:
             raise ValueError("Invalid SleepNumber, must be between 0 and 100")
         setting = int(round(setting / 5)) * 5
-        data = {"sleepNumber": setting, "side": self.side}
+        data = {
+            "sleepNumber": setting, 
+            "side": SIDES_SHORT[self.side],
+        }
         await self.api.put("bed/" + self.bed_id + "/sleepNumber", data)
 
     async def set_favsleepnumber(self, setting: int) -> None:
@@ -50,7 +53,10 @@ class SleepIQSleeper:
         if 0 > setting or setting > 100:
             raise ValueError("Invalid SleepNumber, must be between 0 and 100")
         setting = int(round(setting / 5)) * 5
-        data = {"side": self.side, "sleepNumberFavorite": setting}
+        data = {
+            "side": SIDES_SHORT[self.side],
+            "sleepNumberFavorite": setting,
+        }
         await self.api.put("bed/" + self.bed_id + "/sleepNumberFavorite", data)
         await self.fetch_favsleepnumber()
 

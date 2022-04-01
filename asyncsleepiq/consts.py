@@ -52,8 +52,9 @@ MASSAGE_MODES = [Mode.OFF, Mode.SOOTHE, Mode.REVITILIZE, Mode.WAVE]
 class Side(str, enum.Enum):
     LEFT = "L"
     RIGHT = "R"
-    NONE = "R"
-SIDES_FULL = {Side.LEFT: "Left", Side.RIGHT: "Right"}
+    NONE = "-"
+SIDES_SHORT = {Side.LEFT: "L", Side.RIGHT: "R", Side.NONE: "R"}
+SIDES_FULL = {Side.LEFT: "Left", Side.RIGHT: "Right", Side.NONE: "Right"}
 
 FOUNDATION_TYPES = ["single", "splitHead", "splitKing", "easternKing"]
 

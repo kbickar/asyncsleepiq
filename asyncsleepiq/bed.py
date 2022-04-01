@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from .api import SleepIQAPI
-from .consts import SIDES_FULL
+from .consts import SIDES_FULL, Side
 from .foundation import SleepIQFoundation
 from .sleeper import SleepIQSleeper
 
@@ -22,7 +22,7 @@ class SleepIQBed:
         self.paused = False
         self.sleepers = [
             SleepIQSleeper(api, self.id, data[f"sleeper{SIDES_FULL[side]}Id"], side)
-            for side in SIDES_FULL
+            for side in [Side.LEFT, Side.RIGHT]
             if data.get(f"sleeper{SIDES_FULL[side]}Id")
         ]
         self.foundation = SleepIQFoundation(api, self.id)
