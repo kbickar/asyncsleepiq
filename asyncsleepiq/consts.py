@@ -33,18 +33,21 @@ BED_PRESETS = {
     "Snore": SNORE,
 }
 
-OFF = 0
-LOW = 1
-MEDIUM = 2
-HIGH = 3
+class Speed(int, enum.Enum):
+    OFF = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
 
-MASSAGE_SPEED = [OFF, LOW, MEDIUM, HIGH]
+MASSAGE_SPEEDS = [Speed.OFF, Speed.LOW, Speed.MEDIUM, Speed.HIGH]
 
-SOOTHE = 1
-REVITILIZE = 2
-WAVE = 3
+class Mode(int, enum.Enum):
+    OFF = 0
+    SOOTHE = 1
+    REVITILIZE = 2
+    WAVE = 3
 
-MASSAGE_MODE = [OFF, SOOTHE, REVITILIZE, WAVE]
+MASSAGE_MODES = [Mode.OFF, Mode.SOOTHE, Mode.REVITILIZE, Mode.WAVE]
 
 class Side(str, enum.Enum):
     LEFT = "L"
