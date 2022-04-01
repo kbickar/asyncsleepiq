@@ -13,4 +13,4 @@ from .light import SleepIQLight
 from .preset import SleepIQPreset
 from .sleeper import SleepIQSleeper
 
-__version__ = "1.2.1"
+__version__ = "1.2.2"
