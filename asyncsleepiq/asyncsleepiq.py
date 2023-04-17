@@ -7,6 +7,7 @@ from .api import SleepIQAPI
 from .bed import SleepIQBed
 from .consts import LOGIN_KEY
 from .fuzion.bed import SleepIQFuzionBed
+from .fuzion.bed import SleepIQFuzionBed
 
 
 class AsyncSleepIQ(SleepIQAPI):
@@ -27,6 +28,8 @@ class AsyncSleepIQ(SleepIQAPI):
     async def init_beds(self) -> None:
         """Initialize bed and sleeper objects from API data."""
         data = await self.get("bed")
+
+        self._account_id = data["beds"][0].get("accountId", "")
 
         self._account_id = data["beds"][0].get("accountId", "")
 
