@@ -6,6 +6,7 @@ from aiohttp import ClientSession
 from .api import SleepIQAPI
 from .bed import SleepIQBed
 from .consts import LOGIN_KEY
+from .fuzion.bed import SleepIQFuzionBed
 
 
 class AsyncSleepIQ(SleepIQAPI):
@@ -27,8 +28,15 @@ class AsyncSleepIQ(SleepIQAPI):
         """Initialize bed and sleeper objects from API data."""
         data = await self.get("bed")
 
+        self._account_id = data["beds"][0].get("accountId", "")
+
         # get beds
-        self.beds = {bed["bedId"]: SleepIQBed(self, bed) for bed in data["beds"]}
+        self.beds = {}
+        for bed in data["beds"]:
+            if data.get("generation", "") == "fuzion":
+                self.beds.append(SleepIQFuzionBed(self, bed))
+            else:
+                self.beds.append(SleepIQBed(self, bed))
 
         # get sleepers and assign to beds
         data = await self.get("sleeper")

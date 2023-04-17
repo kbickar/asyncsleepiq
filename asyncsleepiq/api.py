@@ -9,13 +9,15 @@ from typing import Any, cast
 
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 
-from .consts import API_URL, LOGIN_KEY, TIMEOUT
+from .consts import API_URL, BAMKEY, LOGIN_KEY, TIMEOUT
 from .exceptions import (
     SleepIQAPIException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
 
+
+SOURCE_APP = "ASycnSleepIQ API"
 
 def random_user_agent() -> str:
     """Create a randomly generated sorta valid User Agent string."""
@@ -66,6 +68,7 @@ class SleepIQAPI:
         self._session = client_session or ClientSession()
         self._headers = {"User-Agent": random_user_agent()}
         self._login_method = login_method
+        self._account_id = ""
 
     async def close_session(self) -> None:
         """Close the API session."""
@@ -189,6 +192,18 @@ class SleepIQAPI:
             bool,
             await self.__make_request(self._session.get, url, json, params, check=True),
         )
+    
+    async def bamkey(self, bed_id: str, key:str, args: list[str] = []) -> str:
+        """Make a request to the API using the bamkey endpoint."""
+        url = f"sn/v1/accounts/{self._account_id}/beds/{bed_id}/bamkey"
+        json = {
+            "args": " ".join(args),
+            "key": BAMKEY[key],
+            "sourceApplication": SOURCE_APP,
+        }
+        json = await self.put(url, json)
+        return json.get("cdcResponse","").replace("PASS:", "")
+
 
     async def __make_request(
         self,
