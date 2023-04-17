@@ -30,8 +30,6 @@ class AsyncSleepIQ(SleepIQAPI):
 
         self._account_id = data["beds"][0].get("accountId", "")
 
-        self._account_id = data["beds"][0].get("accountId", "")
-
         # get beds
         self.beds = {}
         for bed in data["beds"]:
