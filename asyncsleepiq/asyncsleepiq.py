@@ -7,7 +7,6 @@ from .api import SleepIQAPI
 from .bed import SleepIQBed
 from .consts import LOGIN_KEY
 from .fuzion.bed import SleepIQFuzionBed
-from .fuzion.bed import SleepIQFuzionBed
 
 
 class AsyncSleepIQ(SleepIQAPI):
