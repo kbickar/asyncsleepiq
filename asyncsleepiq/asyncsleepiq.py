@@ -65,3 +65,4 @@ class AsyncSleepIQ(SleepIQAPI):
                     sleeper.in_bed = sleeper_data["isInBed"]
                     sleeper.pressure = sleeper_data["pressure"]
                     sleeper.sleep_number = sleeper_data["sleepNumber"]
+                    await sleeper.update()

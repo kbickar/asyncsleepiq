@@ -86,6 +86,7 @@ BAMKEY = {
     "GetSleepiqPrivacyState": "SPRG",
     "InterruptSleepNumberAdjustment": "PSNI",
     "StartSleepNumberAdjustment": "PSNS",
+    "GetSleepNumberControls": "SNCG",
     "SetFavoriteSleepNumber": "SNFS",
     "GetFavoriteSleepNumber": "SNFG",
     "SetUnderbedLightSettings": "UBLS",
