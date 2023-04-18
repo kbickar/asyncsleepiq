@@ -17,7 +17,8 @@ from .exceptions import (
 )
 
 
-SOURCE_APP = "ASycnSleepIQ API"
+SOURCE_APP = "AsyncSleepIQ API"
+
 
 def random_user_agent() -> str:
     """Create a randomly generated sorta valid User Agent string."""
