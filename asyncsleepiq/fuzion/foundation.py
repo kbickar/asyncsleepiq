@@ -22,7 +22,7 @@ from .actuator import SleepIQFuzionActuator
 from .light import SleepIQFuzionLight
 
 FEATURE_NAMES = [
-    "TODO", # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
+    "bedType", # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
     "pressureControlEnabledFlag",
     "articulationEnableFlag",
     "underbedLightEnableFlag",
