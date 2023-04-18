@@ -22,6 +22,7 @@ from .actuator import SleepIQFuzionActuator
 from .light import SleepIQFuzionLight
 
 FEATURE_NAMES = [
+    "TODO", # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
     "pressureControlEnabledFlag",
     "articulationEnableFlag",
     "underbedLightEnableFlag",
@@ -103,7 +104,7 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""
         vals = await self._api.bamkey(self.bed_id, "GetSystemConfiguration")
-        for k, v in zip(FEATURE_NAMES, vals.split()[1:]): # Slice off the first item (often "dual" - not a feature we track)
+        for k, v in zip(FEATURE_NAMES, vals.split()):
             if v == "no":
                 v = False
             elif v == "yes":

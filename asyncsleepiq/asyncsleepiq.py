@@ -33,10 +33,10 @@ class AsyncSleepIQ(SleepIQAPI):
         # get beds
         self.beds = {}
         for bed in data["beds"]:
-            if data.get("generation", "") == "fuzion":
-                self.beds.append(SleepIQFuzionBed(self, bed))
+            if bed.get("generation", "") == "fuzion":
+                self.beds[bed["bedId"]] = SleepIQFuzionBed(self, bed)
             else:
-                self.beds.append(SleepIQBed(self, bed))
+                self.beds[bed["bedId"]] = SleepIQBed(self, bed)
 
         # get sleepers and assign to beds
         data = await self.get("sleeper")
