@@ -16,10 +16,10 @@ class SleepIQFuzionActuator(SleepIQActuator):
         if position == self.position:
             return
         args = [self.side_full.lower(), self.actuator_full.lower(), str(position)]
-        await self._api.bamkey(self.id, "SetActuatorTargetPosition", args)
+        await self._api.bamkey(self.bed_id, "SetActuatorTargetPosition", args)
 
     async def update(self, data: dict[str, Any]) -> None:
         """Update the position of an actuator from the API."""
         args = [self.side_full.lower(), self.actuator_full.lower()]
-        result = await self._api.bamkey(self.id, "GetActuatorPosition", args)
+        result = await self._api.bamkey(self.bed_id, "GetActuatorPosition", args)
         self.position = int(result)

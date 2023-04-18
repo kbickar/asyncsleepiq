@@ -20,10 +20,10 @@ class SleepIQFuzionLight(SleepIQLight):
     async def set_light(self, setting: bool) -> None:
         """Set light state through API."""
         arg = "high" if setting else "off"
-        await self._api.bamkey(self.id, "SetUnderbedLightSettings", args=[arg, "0"])
+        await self._api.bamkey(self.bed_id, "SetUnderbedLightSettings", args=[arg, "0"])
 
     async def update(self) -> None:
         """Update light state from API."""
-        result = await self._api.bamkey(self.id, "GetUnderbedLightSettings")
+        result = await self._api.bamkey(self.bed_id, "GetUnderbedLightSettings")
         state, num = result.split()
         self.is_on = state != "off"

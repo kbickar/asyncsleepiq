@@ -41,9 +41,9 @@ class SleepIQFuzionPreset(SleepIQPreset):
         if preset not in self.options:
             raise ValueError("Invalid preset")
         args = [self.side_full.lower(), PRESET_VALS[preset]]
-        await self._api.bamkey(self.id, "SetTargetPresetWithoutTimer", args)
+        await self._api.bamkey(self.bed_id, "SetTargetPresetWithoutTimer", args)
 
     async def update(self, data: dict[str, Any]) -> None:
         """Update the position of an actuator from the API."""
         args = [self.side_full.lower()]
-        self.preset = await self._api.bamkey(self.id, "GetCurrentPreset", args)
+        self.preset = await self._api.bamkey(self.bed_id, "GetCurrentPreset", args)

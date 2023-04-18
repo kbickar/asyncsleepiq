@@ -17,25 +17,26 @@ from ..consts import (
     Speed,
 )
 from ..foundation import SleepIQFoundation
-from ..preset import SleepIQPreset
+from .preset import SleepIQFuzionPreset
 from .actuator import SleepIQFuzionActuator
 from .light import SleepIQFuzionLight
 
 FEATURE_NAMES = [
-    "pressureControlEnabledFlag"
-    "articulationEnableFlag"
-    "underbedLightEnableFlag"
-    "rapidSleepSettingEnableFlag"
-    "thermalControlEnabledFlag"
-    "rightHeadActuator"
-    "rightFootActuator"
-    "leftHeadActuator"
-    "leftFootActuator"
-    "flatPreset"
-    "favoritePreset"
-    "snorePreset"
-    "zeroGravityPreset"
-    "watchTvPreset"
+    "bedType", # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
+    "pressureControlEnabledFlag",
+    "articulationEnableFlag",
+    "underbedLightEnableFlag",
+    "rapidSleepSettingEnableFlag",
+    "thermalControlEnabledFlag",
+    "rightHeadActuator",
+    "rightFootActuator",
+    "leftHeadActuator",
+    "leftFootActuator",
+    "flatPreset",
+    "favoritePreset",
+    "snorePreset",
+    "zeroGravityPreset",
+    "watchTvPreset",
     "readPreset",
 ]
 
@@ -49,13 +50,13 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             await self.init_lights()
         if self.features["articulationEnableFlag"]:
             await self.init_actuators()
-        await self.init_presets()
+        await self.init_presets({})
 
     async def update_foundation_status(self) -> None:
         """Update all foundation data from API."""
         await self.update_lights()
-        await self.update_actuators([])
-        await self.update_presets([])
+        await self.update_actuators({})
+        await self.update_presets({})
 
     async def init_lights(self) -> None:
         """Initialize list of lights available on foundation."""
@@ -91,18 +92,18 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             options.append(PRESET_READ)
 
         if self.type in ["single", "easternKing"]:
-            self.presets = [SleepIQPreset(self._api, self.bed_id, Side.NONE)]
+            self.presets = [SleepIQFuzionPreset(self._api, self.bed_id, Side.NONE, options)]
         else:
             self.presets = [
-                SleepIQPreset(self._api, self.bed_id, Side.LEFT),
-                SleepIQPreset(self._api, self.bed_id, Side.RIGHT),
+                SleepIQFuzionPreset(self._api, self.bed_id, Side.LEFT, options),
+                SleepIQFuzionPreset(self._api, self.bed_id, Side.RIGHT, options),
             ]
 
-        await self.update_presets([])
+        await self.update_presets({})
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""
-        vals = await self._api.bamkey(self.id, "GetSystemConfiguration")
+        vals = await self._api.bamkey(self.bed_id, "GetSystemConfiguration")
         for k, v in zip(FEATURE_NAMES, vals.split()):
             if v == "no":
                 v = False
@@ -112,7 +113,7 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
 
     async def stop_motion(self, side: str) -> None:
         """Stop motion on L or R side of bed."""
-        await self._api.bamkey(self.id, "HaltAllActuators")
+        await self._api.bamkey(self.bed_id, "HaltAllActuators")
 
     async def set_foundation_massage(
         self, side: str, foot_speed: Speed, head_speed: Speed, timer: int = 0, mode: Mode = Mode.OFF

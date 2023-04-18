@@ -14,7 +14,7 @@ class SleepIQFuzionSleeper(SleepIQSleeper):
             raise ValueError("Invalid SleepNumber, must be between 0 and 100")
         setting = int(round(setting / 5)) * 5
         args = [SIDES_FULL[self.side].lower(), setting]
-        await self.api.bamkey(self.id, "StartSleepNumberAdjustment", args=args)
+        await self.api.bamkey(self.bed_id, "StartSleepNumberAdjustment", args=args)
 
     async def set_favsleepnumber(self, setting: int) -> None:
         """Set favorite sleep number 5-100 (multiple of 5)."""
@@ -22,10 +22,10 @@ class SleepIQFuzionSleeper(SleepIQSleeper):
             raise ValueError("Invalid SleepNumber, must be between 0 and 100")
         setting = int(round(setting / 5)) * 5
         args = [SIDES_FULL[self.side].lower(), setting]
-        await self.api.bamkey(self.id, "SetFavoriteSleepNumber", args=args)
+        await self.api.bamkey(self.bed_id, "SetFavoriteSleepNumber", args=args)
         await self.fetch_favsleepnumber()
 
     async def fetch_favsleepnumber(self) -> None:
         """Update fav_sleep_number from API."""
-        result = await self.api.bamkey(self.id, "GetFavoriteSleepNumber")
+        result = await self.api.bamkey(self.bed_id, "GetFavoriteSleepNumber")
         self.fav_sleep_number = int(result)

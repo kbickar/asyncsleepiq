@@ -174,9 +174,9 @@ class SleepIQAPI:
 
     async def put(
         self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
-    ) -> None:
+    ) -> dict[str, Any]:
         """Make a PUT request to the API."""
-        await self.__make_request(self._session.put, url, json, params)
+        return await self.__make_request(self._session.put, url, json, params)
 
     async def get(
         self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
