@@ -32,6 +32,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install build
+    - name: Set version number
+      run: |
+        sed -i 's/{{VERSION_PLACEHOLDER}}/'$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')'/g' setup.py asyncsleepiq/__init__.py
     - name: Build package
       run: python -m build -x
     - name: Publish package

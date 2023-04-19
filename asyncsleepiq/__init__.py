@@ -12,3 +12,5 @@ from .foundation import SleepIQFoundation
 from .light import SleepIQLight
 from .preset import SleepIQPreset
 from .sleeper import SleepIQSleeper
+
+__version__ = "{{VERSION_PLACEHOLDER}}"
