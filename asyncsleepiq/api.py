@@ -9,12 +9,15 @@ from typing import Any, cast
 
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 
-from .consts import API_URL, LOGIN_KEY, TIMEOUT
+from .consts import API_URL, BAMKEY, LOGIN_KEY, TIMEOUT
 from .exceptions import (
     SleepIQAPIException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
+
+
+SOURCE_APP = "AsyncSleepIQ API"
 
 
 def random_user_agent() -> str:
@@ -66,6 +69,7 @@ class SleepIQAPI:
         self._session = client_session or ClientSession()
         self._headers = {"User-Agent": random_user_agent()}
         self._login_method = login_method
+        self._account_id = ""
 
     async def close_session(self) -> None:
         """Close the API session."""
@@ -171,9 +175,9 @@ class SleepIQAPI:
 
     async def put(
         self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
-    ) -> None:
+    ) -> dict[str, Any]:
         """Make a PUT request to the API."""
-        await self.__make_request(self._session.put, url, json, params)
+        return await self.__make_request(self._session.put, url, json, params)
 
     async def get(
         self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
@@ -189,6 +193,18 @@ class SleepIQAPI:
             bool,
             await self.__make_request(self._session.get, url, json, params, check=True),
         )
+    
+    async def bamkey(self, bed_id: str, key:str, args: list[str] = []) -> str:
+        """Make a request to the API using the bamkey endpoint."""
+        url = f"sn/v1/accounts/{self._account_id}/beds/{bed_id}/bamkey"
+        json = {
+            "args": " ".join(args),
+            "key": BAMKEY[key],
+            "sourceApplication": SOURCE_APP,
+        }
+        json = await self.put(url, json)
+        return json.get("cdcResponse","").replace("PASS:", "")
+
 
     async def __make_request(
         self,

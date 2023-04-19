@@ -28,7 +28,6 @@ class SleepIQFoundation:
         self.features: dict[str, Any] = {}
         self.type = ""
         self.actuators: list[SleepIQActuator] = []
-        self.is_moving = False
         self.presets: list[SleepIQPreset] = []
 
     def __str__(self) -> str:
@@ -58,16 +57,14 @@ class SleepIQFoundation:
             return
 
         data = await self._api.get(f"bed/{self.bed_id}/foundation/status")
-        
+
         await self.update_actuators(data)
         await self.update_presets(data)
 
     async def init_lights(self) -> None:
         """Initialize list of lights available on foundation."""
         for light in BED_LIGHTS:
-            exists = await self._api.check(
-                f"bed/{self.bed_id}/foundation/outlet", params={"outletId": light}
-            )
+            exists = await self._api.check(f"bed/{self.bed_id}/foundation/outlet", params={"outletId": light})
             if exists:
                 self.lights.append(SleepIQLight(self._api, self.bed_id, light))
         await self.update_lights()
@@ -79,7 +76,6 @@ class SleepIQFoundation:
 
     async def init_actuators(self, data: dict[str, Any]) -> None:
         """Initialize list of actuators available on foundation."""
-        self.is_moving = data["fsIsMoving"]
 
         if self.type in ["single", "easternKing"]:
             self.actuators = [
@@ -110,14 +106,13 @@ class SleepIQFoundation:
         else:
             self.presets = [
                 SleepIQPreset(self._api, self.bed_id, Side.LEFT),
-                SleepIQPreset(self._api, self.bed_id, Side.RIGHT)
+                SleepIQPreset(self._api, self.bed_id, Side.RIGHT),
             ]
 
         await self.update_presets(data)
 
     async def update_actuators(self, data: dict[str, Any]) -> None:
         """Update actuator states from API."""
-        self.is_moving = data["fsIsMoving"]
         for actuator in self.actuators:
             await actuator.update(data)
 
@@ -128,9 +123,7 @@ class SleepIQFoundation:
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""
-        have_foundation = await self._api.check(
-            "bed/" + self.bed_id + "/foundation/system"
-        )
+        have_foundation = await self._api.check("bed/" + self.bed_id + "/foundation/system")
         if not have_foundation:
             self.type = ""
             return

@@ -32,6 +32,10 @@ class SleepIQSleeper:
     def __repr__(self) -> str:
         """Return string representation."""
         return f"SleepIQSleeper[{self.side}]({self.name}, in_bed={self.in_bed}, sn={self.sleep_number})"
+    
+    async def update(self) -> None:
+        """Updates sleeper with latest data."""
+        pass
 
     async def calibrate(self) -> None:
         """Calibrate or "baseline" bed."""
