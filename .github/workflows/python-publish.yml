@@ -32,7 +32,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install build
-        python -m build
+        python -m build -x
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@unstable/v1
       with:
