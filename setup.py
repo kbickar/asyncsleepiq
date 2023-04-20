@@ -8,7 +8,7 @@ def readme():
 
 setup(
     name="asyncsleepiq",
-    packages=["asyncsleepiq"],
+    packages=["asyncsleepiq", "asyncsleepiq.fuzion"],
     package_data={"asyncsleepiq": ["py.typed"]},
     version="{{VERSION_PLACEHOLDER}}",
     description="ASync SleepIQ API",
