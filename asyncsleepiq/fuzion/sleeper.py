@@ -25,7 +25,6 @@ class SleepIQFuzionSleeper(SleepIQSleeper):
         args = [SIDES_FULL[self.side].lower()]
         result = await self.api.bamkey(self.bed_id, "GetSleepNumberControls", args=args)
         isUpdating, ambientNumber, userNumber = result.split()
-        print("CURRENT NUMBER FOR", self.side, result)
         self.sleep_number = int(userNumber)
 
     async def set_favsleepnumber(self, setting: int) -> None:
@@ -41,5 +40,4 @@ class SleepIQFuzionSleeper(SleepIQSleeper):
         """Update fav_sleep_number from API."""
         args = [SIDES_FULL[self.side].lower()]
         result = await self.api.bamkey(self.bed_id, "GetFavoriteSleepNumber", args=args)
-        print("CURRENT FAV NUMBER FOR", self.side, result)
         self.fav_sleep_number = int(result)
