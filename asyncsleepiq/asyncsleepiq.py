@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 from aiohttp import ClientSession
+import logging
 
 from .api import SleepIQAPI
 from .bed import SleepIQBed
 from .consts import LOGIN_KEY
 from .fuzion.bed import SleepIQFuzionBed
+from .exceptions import SleepIQAPIException
+
+_LOGGER = logging.getLogger("ASyncSleepIQ")
 
 
 class AsyncSleepIQ(SleepIQAPI):
@@ -32,11 +36,19 @@ class AsyncSleepIQ(SleepIQAPI):
 
         # get beds
         self.beds = {}
-        for bed in data["beds"]:
-            if bed.get("generation", "") == "fuzion":
-                self.beds[bed["bedId"]] = SleepIQFuzionBed(self, bed)
-            else:
-                self.beds[bed["bedId"]] = SleepIQBed(self, bed)
+        for bed_data in data["beds"]:
+            try:
+                if bed_data.get("generation", "") == "fuzion":
+                    bed = SleepIQFuzionBed(self, bed_data)
+                else:
+                    bed = SleepIQBed(self, bed_data)
+                if await bed.valid():
+                    raise SleepIQAPIException(402, "Test")
+                    self.beds[bed_data["bedId"]] = bed
+            except SleepIQAPIException as e:
+                _LOGGER.error(
+                    f"Received {e.code} error setting up bed: {bed_data.get('name', 'unknown')}, skipping..."
+                )
 
         # get sleepers and assign to beds
         data = await self.get("sleeper")

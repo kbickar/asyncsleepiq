@@ -23,22 +23,11 @@ SOURCE_APP = "AsyncSleepIQ API"
 def random_user_agent() -> str:
     """Create a randomly generated sorta valid User Agent string."""
     uas = {
-        "Edge": (
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43"
-        ),
-        "Chrome": (
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/97.0.4692.99 Safari/537.36"
-        ),
+        "Edge": ("AppleWebKit/537.36 (KHTML, like Gecko) " "Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43"),
+        "Chrome": ("AppleWebKit/537.36 (KHTML, like Gecko) " "Chrome/97.0.4692.99 Safari/537.36"),
         "Firefox": "Gecko/20100101 Firefox/96.0",
-        "iphone": (
-            "AppleWebKit/605.1.15 (KHTML, like Gecko) "
-            "Version/15.2 Mobile/15E148 Safari/604.1"
-        ),
-        "Safari": (
-            "AppleWebKit/605.1.15 (KHTML, like Gecko) " "Version/11.1.2 Safari/605.1.15"
-        ),
+        "iphone": ("AppleWebKit/605.1.15 (KHTML, like Gecko) " "Version/15.2 Mobile/15E148 Safari/604.1"),
+        "Safari": ("AppleWebKit/605.1.15 (KHTML, like Gecko) " "Version/11.1.2 Safari/605.1.15"),
     }
     os = {
         "windows": "Windows NT 10.0; Win64; x64",
@@ -47,9 +36,7 @@ def random_user_agent() -> str:
     }
     template = "Mozilla/5.0 ({os}) {ua}"
 
-    return template.format(
-        os=random.choice(list(os.values())), ua=random.choice(list(uas.values()))
-    )
+    return template.format(os=random.choice(list(os.values())), ua=random.choice(list(uas.values())))
 
 
 class SleepIQAPI:
@@ -76,9 +63,7 @@ class SleepIQAPI:
         if self._session:
             await self._session.close()
 
-    async def login(
-        self, email: str | None = None, password: str | None = None
-    ) -> None:
+    async def login(self, email: str | None = None, password: str | None = None) -> None:
         """Login using the with the email/password provided or stored."""
         if not email:
             email = self.email
@@ -113,13 +98,10 @@ class SleepIQAPI:
         async with self._session.put(
             API_URL + "/login", headers=self._headers, timeout=TIMEOUT, json=auth_data
         ) as resp:
-
             if resp.status == 401:
                 raise SleepIQLoginException("Incorrect username or password")
             if resp.status == 403:
-                raise SleepIQLoginException(
-                    "User Agent is blocked. May need to update GenUserAgent data?"
-                )
+                raise SleepIQLoginException("User Agent is blocked. May need to update GenUserAgent data?")
             if resp.status not in (200, 201):
                 raise SleepIQLoginException(
                     "Unexpected response code: {code}\n{body}".format(
@@ -144,13 +126,10 @@ class SleepIQAPI:
             timeout=TIMEOUT,
             json=auth_data,
         ) as resp:
-
             if resp.status == 401:
                 raise SleepIQLoginException("Incorrect username or password")
             if resp.status == 403:
-                raise SleepIQLoginException(
-                    "User Agent is blocked. May need to update GenUserAgent data?"
-                )
+                raise SleepIQLoginException("User Agent is blocked. May need to update GenUserAgent data?")
             if resp.status not in (200, 201):
                 raise SleepIQLoginException(
                     "Unexpected response code: {code}\n{body}".format(
@@ -162,9 +141,7 @@ class SleepIQAPI:
             token = json["data"]["AccessToken"]
             self._headers["Authorization"] = token
 
-        async with self._session.get(
-            API_URL + "/user/jwt", headers=self._headers, timeout=TIMEOUT
-        ) as resp:
+        async with self._session.get(API_URL + "/user/jwt", headers=self._headers, timeout=TIMEOUT) as resp:
             if resp.status not in (200, 201):
                 raise SleepIQLoginException(
                     "Unexpected response code: {code}\n{body}".format(
@@ -173,28 +150,22 @@ class SleepIQAPI:
                     )
                 )
 
-    async def put(
-        self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
-    ) -> dict[str, Any]:
+    async def put(self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}) -> dict[str, Any]:
         """Make a PUT request to the API."""
         return await self.__make_request(self._session.put, url, json, params)
 
-    async def get(
-        self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
-    ) -> dict[str, Any] | Any:
+    async def get(self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}) -> dict[str, Any] | Any:
         """Make a GET request to the API."""
         return await self.__make_request(self._session.get, url, json, params)
 
-    async def check(
-        self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}
-    ) -> bool:
+    async def check(self, url: str, json: dict[str, Any] = {}, params: dict[str, Any] = {}) -> bool:
         """Check if a GET request to the API would be successful."""
         return cast(
             bool,
             await self.__make_request(self._session.get, url, json, params, check=True),
         )
-    
-    async def bamkey(self, bed_id: str, key:str, args: list[str] = []) -> str:
+
+    async def bamkey(self, bed_id: str, key: str, args: list[str] = []) -> str:
         """Make a request to the API using the bamkey endpoint."""
         url = f"sn/v1/accounts/{self._account_id}/beds/{bed_id}/bamkey"
         json = {
@@ -203,8 +174,7 @@ class SleepIQAPI:
             "sourceApplication": SOURCE_APP,
         }
         json = await self.put(url, json)
-        return json.get("cdcResponse","").replace("PASS:", "")
-
+        return json.get("cdcResponse", "").replace("PASS:", "")
 
     async def __make_request(
         self,
@@ -233,12 +203,8 @@ class SleepIQAPI:
                     if retry and resp.status in (401, 404):
                         # login and try again
                         await self.login()
-                        return await self.__make_request(
-                            make_request, url, json, params, False
-                        )
-                    raise SleepIQAPIException(
-                        f"API call error response {resp.status}\n{resp.text}"
-                    )
+                        return await self.__make_request(make_request, url, json, params, False)
+                    raise SleepIQAPIException(resp.status, f"API call error response {resp.status}\n{resp.text}")
                 return await resp.json()
         except asyncio.TimeoutError as ex:
             # timed out

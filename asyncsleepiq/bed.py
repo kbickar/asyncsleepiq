@@ -54,6 +54,9 @@ class SleepIQBed:
             + str(self.foundation)
         )
 
+    async def valid(self) -> bool:
+        return await self._api.check("bed/" + self.id + "/pauseMode")
+
     async def calibrate(self) -> None:
         """Calibrate or "baseline" bed."""
         for sleeper in self.sleepers:

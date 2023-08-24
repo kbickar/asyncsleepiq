@@ -25,6 +25,13 @@ class SleepIQFuzionBed(SleepIQBed):
         ]
         self.foundation: SleepIQFoundation = SleepIQFuzionFoundation(api, self.id)
 
+    async def valid(self) -> bool:
+        try:
+            await self._api.bamkey(self.id, "GetSleepiqPrivacyState")
+            return True
+        except:
+            return False
+
     async def stop_pump(self) -> None:
         """Stop pump."""
         await self._api.bamkey(self.id, "InterruptSleepNumberAdjustment")

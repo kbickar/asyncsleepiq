@@ -11,3 +11,8 @@ class SleepIQTimeoutException(Exception):
 
 class SleepIQAPIException(Exception):
     """Exception in API call."""
+
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+        super().__init__(message)
