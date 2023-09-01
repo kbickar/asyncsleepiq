@@ -43,7 +43,6 @@ class AsyncSleepIQ(SleepIQAPI):
                 else:
                     bed = SleepIQBed(self, bed_data)
                 if await bed.valid():
-                    raise SleepIQAPIException(402, "Test")
                     self.beds[bed_data["bedId"]] = bed
             except SleepIQAPIException as e:
                 _LOGGER.error(
