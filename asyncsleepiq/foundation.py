@@ -14,6 +14,7 @@ from .consts import (
     Speed,
 )
 from .light import SleepIQLight
+from .foot_warmer import SleepIQFootWarmer
 from .preset import SleepIQPreset
 
 
@@ -25,6 +26,7 @@ class SleepIQFoundation:
         self._api = api
         self.bed_id = bed_id
         self.lights: list[SleepIQLight] = []
+        self.foot_warmers: list[SleepIQFootWarmer] = []
         self.features: dict[str, Any] = {}
         self.type = ""
         self.actuators: list[SleepIQActuator] = []
@@ -41,6 +43,7 @@ class SleepIQFoundation:
     async def init_features(self) -> None:
         """Initialize all foundation features."""
         await self.init_lights()
+        await self.init_foot_warmers()
 
         if not self.type:
             return
@@ -52,6 +55,7 @@ class SleepIQFoundation:
     async def update_foundation_status(self) -> None:
         """Update all foundation data from API."""
         await self.update_lights()
+        await self.update_foot_warmers()
 
         if not self.type:
             return
@@ -60,6 +64,21 @@ class SleepIQFoundation:
 
         await self.update_actuators(data)
         await self.update_presets(data)
+
+    async def init_foot_warmers(self) -> None:
+        if not self.features["hasFootWarming"]:
+            return
+
+        for side in [Side.LEFT, Side.RIGHT]:
+            self.foot_warmers.append(SleepIQFootWarmer(self._api, self.bed_id, side, 0, 0))
+
+    async def update_foot_warmers(self) -> None:
+        if not self.features["hasFootWarming"]:
+            return
+
+        data = await self._api.get(f"bed/{self.bed_id}/foundation/footwarming")
+        for foot_warmer in self.foot_warmers:
+            await foot_warmer.update(data)
 
     async def init_lights(self) -> None:
         """Initialize list of lights available on foundation."""
