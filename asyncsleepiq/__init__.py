@@ -8,6 +8,7 @@ from .exceptions import (
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
+from .foot_warmer import SleepIQFootWarmer
 from .foundation import SleepIQFoundation
 from .light import SleepIQLight
 from .preset import SleepIQPreset
