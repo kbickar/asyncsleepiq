@@ -27,7 +27,15 @@ class SleepIQFoundation:
         self.bed_id = bed_id
         self.lights: list[SleepIQLight] = []
         self.foot_warmers: list[SleepIQFootWarmer] = []
-        self.features: dict[str, Any] = {}
+        self.features: dict[str, bool] = {
+            "boardIsASingle": False,
+            "hasMassageAndLight": False,
+            "hasFootControl": False,
+            "hasFootWarming": False,
+            "hasUnderbedLight": False,
+            "leftUnderbedLightPMW": False,
+            "rightUnderbedLightPMW": False,
+        }
         self.type = ""
         self.actuators: list[SleepIQActuator] = []
         self.presets: list[SleepIQPreset] = []
@@ -160,10 +168,10 @@ class SleepIQFoundation:
         else:
             self.type = FOUNDATION_TYPES[type_num]
 
-        self.features["leftUnderbedLightPMW"] = fs.get("fsLeftUnderbedLightPWM")
-        self.features["rightUnderbedLightPMW"] = fs.get("fsRightUnderbedLightPWM")
+        self.features["leftUnderbedLightPMW"] = bool(fs.get("fsLeftUnderbedLightPWM", False))
+        self.features["rightUnderbedLightPMW"] = bool(fs.get("fsRightUnderbedLightPWM", False))
 
-        if "hasMassageAndLight" in self.features:
+        if self.features["hasMassageAndLight"]:
             self.features["hasUnderbedLight"] = True
         if "split" in self.type:
             self.features["boardIsASingle"] = False
