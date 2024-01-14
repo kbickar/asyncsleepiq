@@ -15,7 +15,7 @@ class SleepIQFuzionFootWarmer(SleepIQFootWarmer):
         if time <= 0 or time > 360:
             raise ValueError("Invalid Time, must be between 0 and 360")
 
-        args = [SIDES_FULL[self.side].lower(), temperature.name.lower(), time]
+        args = [SIDES_FULL[self.side].lower(), temperature.name.lower(), str(time)]
         await self._api.bamkey(self.bed_id, "SetFootwarmingSettings", args)
         await self.update({})
 
