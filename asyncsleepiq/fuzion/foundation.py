@@ -11,18 +11,20 @@ from ..consts import (
     PRESET_SNORE,
     PRESET_TV,
     PRESET_ZERO_G,
+    SIDES_FULL,
     End,
     Mode,
     Side,
     Speed,
 )
 from ..foundation import SleepIQFoundation
-from .preset import SleepIQFuzionPreset
 from .actuator import SleepIQFuzionActuator
+from .foot_warmer import SleepIQFuzionFootWarmer
 from .light import SleepIQFuzionLight
+from .preset import SleepIQFuzionPreset
 
 FEATURE_NAMES = [
-    "bedType", # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
+    "bedType",  # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
     "pressureControlEnabledFlag",
     "articulationEnableFlag",
     "underbedLightEnableFlag",
@@ -51,6 +53,7 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
         if self.features["articulationEnableFlag"]:
             await self.init_actuators()
         await self.init_presets({})
+        await self.init_foot_warmers()
 
     async def update_foundation_status(self) -> None:
         """Update all foundation data from API."""
@@ -100,6 +103,13 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             ]
 
         await self.update_presets({})
+
+    async def init_foot_warmers(self) -> None:
+        """Initialize list of foot warmers available on foundation."""
+        for side in [Side.LEFT, Side.RIGHT]:
+            result = await self._api.bamkey(self.bed_id, "GetFootwarmingPresence", args=[SIDES_FULL[side].lower()])
+            if result == "1":
+                self.foot_warmers.append(SleepIQFuzionFootWarmer(self._api, self.bed_id, side, 0, 0))
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""
