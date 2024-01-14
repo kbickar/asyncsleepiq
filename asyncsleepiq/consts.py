@@ -14,11 +14,13 @@ LEFT_NIGHT_LIGHT = 4
 
 BED_LIGHTS = [RIGHT_NIGHT_STAND, LEFT_NIGHT_STAND, RIGHT_NIGHT_LIGHT, LEFT_NIGHT_LIGHT]
 
+
 class FootWarmingTemps(int, enum.Enum):
     OFF = 0
     LOW = 31
     MEDIUM = 57
     HIGH = 72
+
 
 FAVORITE = 1
 READ = 2
@@ -101,4 +103,7 @@ BAMKEY = {
     "SetActuatorTargetPosition": "ACTS",
     "SetTargetPresetWithoutTimer": "ASTP",
     "GetCurrentPreset": "AGCP",
+    "GetFootwarmingPresence": "FWPG",
+    "SetFootwarmingSettings": "FWTS",
+    "GetFootwarmingSettings": "FWTG",
 }
