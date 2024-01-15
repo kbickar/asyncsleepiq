@@ -22,6 +22,7 @@ from .actuator import SleepIQFuzionActuator
 from .foot_warmer import SleepIQFuzionFootWarmer
 from .light import SleepIQFuzionLight
 from .preset import SleepIQFuzionPreset
+from .heidi import SleepIQFuzionHeidi
 
 FEATURE_NAMES = [
     "bedType",  # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
@@ -46,6 +47,8 @@ FEATURE_NAMES = [
 class SleepIQFuzionFoundation(SleepIQFoundation):
     """Foundation object from SleepIQ API."""
 
+    heidi_modes: list[SleepIQFuzionHeidi] = []
+
     async def init_features(self) -> None:
         """Initialize all foundation features."""
         if self.features["underbedLightEnableFlag"]:
@@ -54,6 +57,7 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             await self.init_actuators()
         await self.init_presets({})
         await self.init_foot_warmers()
+        await self.init_heidi_modes()
 
     async def update_foundation_status(self) -> None:
         """Update all foundation data from API."""
@@ -110,6 +114,14 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             result = await self._api.bamkey(self.bed_id, "GetFootwarmingPresence", args=[SIDES_FULL[side].lower()])
             if result == "1":
                 self.foot_warmers.append(SleepIQFuzionFootWarmer(self._api, self.bed_id, side, 0, 0))
+
+    async def init_heidi_modes(self) -> None:
+        """Initialize list of heidi modes available on foundation."""
+        for side in [Side.LEFT, Side.RIGHT]:
+            print(side)
+            result = await self._api.bamkey(self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()])
+            if result == "true":
+                self.heidi_modes.append(SleepIQFuzionHeidi(self._api, self.bed_id, side, 0, 0))
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""
