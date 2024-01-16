@@ -21,7 +21,7 @@ class FootWarmingTemps(int, enum.Enum):
     MEDIUM = 57
     HIGH = 72
 
-class HeidiTemps(int, enum.Enum):
+class CoreTemps(int, enum.Enum):
     OFF = 0
     HEATING_PUSH_LOW = 21
     HEATING_PUSH_MED = 22
