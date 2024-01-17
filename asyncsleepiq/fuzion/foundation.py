@@ -62,6 +62,8 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
         await self.update_lights()
         await self.update_actuators({})
         await self.update_presets({})
+        await self.update_foot_warmers()
+        await self.update_core_climates()
 
     async def init_lights(self) -> None:
         """Initialize list of lights available on foundation."""
@@ -113,12 +115,26 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             if result == "1":
                 self.foot_warmers.append(SleepIQFuzionFootWarmer(self._api, self.bed_id, side, 0, 0))
 
+    async def update_foot_warmers(self) -> None:
+        if not self.foot_warmers: 
+            return
+        
+        for foot_warmer in self.foot_warmers:
+            await foot_warmer.update({})
+
     async def init_core_climates(self) -> None:
         """Initialize list of core climates available on foundation."""
         for side in [Side.LEFT, Side.RIGHT]:
             result = await self._api.bamkey(self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()])
             if result == "true":
                 self.core_climates.append(SleepIQFuzionCoreClimate(self._api, self.bed_id, side, 0, 0))
+
+    async def update_core_climates(self) -> None:
+        if not self.core_climates:
+            return
+
+        for core_climate in self.core_climates:
+            await core_climate.update({})
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""

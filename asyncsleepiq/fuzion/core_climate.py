@@ -30,5 +30,9 @@ class SleepIQFuzionCoreClimate(SleepIQCoreClimate):
     async def update(self, data: dict[str, Any]) -> None:
         """Update the core climate data through the API."""
         args = [SIDES_FULL[self.side].lower()]
-        self.preset = await self._api.bamkey(self.bed_id, "GetHeidiMode", args)
+        data = await self._api.bamkey(self.bed_id, "GetHeidiMode", args)
+        data = data.split()
+        self.temperature = CoreTemps[data[0].upper()]
+        self.is_on = self.temperature > 0
+        self.timer = data[1] if self.is_on else 0
 
