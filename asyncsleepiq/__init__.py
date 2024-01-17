@@ -3,6 +3,7 @@ from .asyncsleepiq import AsyncSleepIQ
 from .actuator import SleepIQActuator
 from .bed import SleepIQBed
 from .consts import *
+from .core_climate import SleepIQCoreClimate
 from .exceptions import (
     SleepIQAPIException,
     SleepIQLoginException,

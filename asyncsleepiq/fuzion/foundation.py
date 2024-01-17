@@ -22,6 +22,7 @@ from .actuator import SleepIQFuzionActuator
 from .foot_warmer import SleepIQFuzionFootWarmer
 from .light import SleepIQFuzionLight
 from .preset import SleepIQFuzionPreset
+from .core_climate import SleepIQFuzionCoreClimate
 
 FEATURE_NAMES = [
     "bedType",  # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
@@ -54,6 +55,7 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             await self.init_actuators()
         await self.init_presets({})
         await self.init_foot_warmers()
+        await self.init_core_climates()
 
     async def update_foundation_status(self) -> None:
         """Update all foundation data from API."""
@@ -110,6 +112,13 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
             result = await self._api.bamkey(self.bed_id, "GetFootwarmingPresence", args=[SIDES_FULL[side].lower()])
             if result == "1":
                 self.foot_warmers.append(SleepIQFuzionFootWarmer(self._api, self.bed_id, side, 0, 0))
+
+    async def init_core_climates(self) -> None:
+        """Initialize list of core climates available on foundation."""
+        for side in [Side.LEFT, Side.RIGHT]:
+            result = await self._api.bamkey(self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()])
+            if result == "true":
+                self.core_climates.append(SleepIQFuzionCoreClimate(self._api, self.bed_id, side, 0, 0))
 
     async def fetch_features(self) -> None:
         """Update list of features available for foundation from API."""

@@ -21,6 +21,14 @@ class FootWarmingTemps(int, enum.Enum):
     MEDIUM = 57
     HIGH = 72
 
+class CoreTemps(int, enum.Enum):
+    OFF = 0
+    HEATING_PUSH_LOW = 21
+    HEATING_PUSH_MED = 22
+    HEATING_PUSH_HIGH = 23
+    COOLING_PULL_LOW = 41
+    COOLING_PULL_MED = 42
+    COOLING_PULL_HIGH = 43
 
 FAVORITE = 1
 READ = 2
@@ -106,4 +114,7 @@ BAMKEY = {
     "GetFootwarmingPresence": "FWPG",
     "SetFootwarmingSettings": "FWTS",
     "GetFootwarmingSettings": "FWTG",
+    "GetHeidiPresence": "THPG",
+    "SetHeidiMode": "THMS",
+    "GetHeidiMode": "THMG",
 }

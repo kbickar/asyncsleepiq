@@ -16,6 +16,7 @@ from .consts import (
 from .light import SleepIQLight
 from .foot_warmer import SleepIQFootWarmer
 from .preset import SleepIQPreset
+from .core_climate import SleepIQCoreClimate
 
 
 class SleepIQFoundation:
@@ -27,6 +28,7 @@ class SleepIQFoundation:
         self.bed_id = bed_id
         self.lights: list[SleepIQLight] = []
         self.foot_warmers: list[SleepIQFootWarmer] = []
+        self.core_climates: list[SleepIQCoreClimate] = []
         self.features: dict[str, bool] = {
             "boardIsASingle": False,
             "hasMassageAndLight": False,
