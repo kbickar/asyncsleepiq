@@ -34,5 +34,5 @@ class SleepIQFuzionCoreClimate(SleepIQCoreClimate):
         data = data.split()
         self.temperature = CoreTemps[data[0].upper()]
         self.is_on = self.temperature > 0
-        self.timer = data[1] if self.is_on else 0
+        self.timer = int(data[1]) if self.is_on else 0
 
