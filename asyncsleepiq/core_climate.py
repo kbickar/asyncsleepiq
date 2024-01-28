@@ -14,6 +14,8 @@ class SleepIQCoreClimate:
         Controls heating and cooling.
     """
 
+    max_core_climate_time = 600
+
     def __init__(self, api: SleepIQAPI, bed_id: str, side: Side, timer: int, temperature: int) -> None:
         """Initialize CoreClimate object."""
         self._api = api
