@@ -133,7 +133,6 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
 
     async def init_core_climates(self) -> None:
         """Initialize list of core climates available on foundation."""
-        presence_key = "GetClimatePresence" if self.bed_model == "CLIMATECOOL" else "GetHeidiPresence"
         climate_cls = (
             SleepIQFuzionClimateCoolCoreClimate
             if self.bed_model == "CLIMATECOOL"
@@ -141,9 +140,13 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
         )
 
         for side in [Side.LEFT, Side.RIGHT]:
-            result = await self._api.bamkey(self.bed_id, presence_key, args=[SIDES_FULL[side].lower()])
+            result = await self._api.bamkey(
+                self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()]
+            )
             if result in ("true", "1"):
-                self.core_climates.append(climate_cls(self._api, self.bed_id, side, 0, 0))
+                self.core_climates.append(
+                    climate_cls(self._api, self.bed_id, side, 0, 0)
+                )
 
     async def update_core_climates(self) -> None:
         if not self.core_climates:
