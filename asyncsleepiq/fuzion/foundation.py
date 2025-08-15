@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..api import SleepIQAPI
 from ..consts import (
     NO_PRESET,
     PRESET_FAV,
@@ -22,7 +23,10 @@ from .actuator import SleepIQFuzionActuator
 from .foot_warmer import SleepIQFuzionFootWarmer
 from .light import SleepIQFuzionLight
 from .preset import SleepIQFuzionPreset
-from .core_climate import SleepIQFuzionCoreClimate
+from .core_climate import (
+    SleepIQFuzionClimateCoolCoreClimate,
+    SleepIQFuzionCoreClimate,
+)
 
 FEATURE_NAMES = [
     "bedType",  # Not sure what best to call this, but there's one flag at the start of the list that's (from testing) always "dual".
@@ -46,6 +50,11 @@ FEATURE_NAMES = [
 
 class SleepIQFuzionFoundation(SleepIQFoundation):
     """Foundation object from SleepIQ API."""
+
+    def __init__(self, api: SleepIQAPI, bed_id: str, model: str) -> None:
+        """Initialize foundation object."""
+        super().__init__(api, bed_id)
+        self.bed_model = model
 
     async def init_features(self) -> None:
         """Initialize all foundation features."""
@@ -124,10 +133,17 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
 
     async def init_core_climates(self) -> None:
         """Initialize list of core climates available on foundation."""
+        presence_key = "GetClimatePresence" if self.bed_model == "CLIMATECOOL" else "GetHeidiPresence"
+        climate_cls = (
+            SleepIQFuzionClimateCoolCoreClimate
+            if self.bed_model == "CLIMATECOOL"
+            else SleepIQFuzionCoreClimate
+        )
+
         for side in [Side.LEFT, Side.RIGHT]:
-            result = await self._api.bamkey(self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()])
-            if result == "true":
-                self.core_climates.append(SleepIQFuzionCoreClimate(self._api, self.bed_id, side, 0, 0))
+            result = await self._api.bamkey(self.bed_id, presence_key, args=[SIDES_FULL[side].lower()])
+            if result in ("true", "1"):
+                self.core_climates.append(climate_cls(self._api, self.bed_id, side, 0, 0))
 
     async def update_core_climates(self) -> None:
         if not self.core_climates:
