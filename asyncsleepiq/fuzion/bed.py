@@ -23,7 +23,8 @@ class SleepIQFuzionBed(SleepIQBed):
             for side in [Side.LEFT, Side.RIGHT]
             if data.get(f"sleeper{SIDES_FULL[side]}Id")
         ]
-        self.foundation: SleepIQFoundation = SleepIQFuzionFoundation(api, self.id, self.model)
+        self.foundation: SleepIQFoundation = SleepIQFuzionFoundation(api, self.id)
+        self.foundation.bed_model = self.model
 
     async def valid(self) -> bool:
         try:
