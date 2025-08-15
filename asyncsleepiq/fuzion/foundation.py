@@ -141,8 +141,12 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
 
         for side in [Side.LEFT, Side.RIGHT]:
             result = await self._api.bamkey(
-                self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()]
+                self.bed_id, "GetClimatePresence", args=[SIDES_FULL[side].lower()]
             )
+            if result not in ("true", "1"):
+                result = await self._api.bamkey(
+                    self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()]
+                )
             if result in ("true", "1"):
                 self.core_climates.append(
                     climate_cls(self._api, self.bed_id, side, 0, 0)
