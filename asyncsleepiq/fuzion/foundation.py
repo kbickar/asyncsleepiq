@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..api import SleepIQAPI
+
 from ..consts import (
     NO_PRESET,
     PRESET_FAV,
@@ -46,6 +48,12 @@ FEATURE_NAMES = [
 
 class SleepIQFuzionFoundation(SleepIQFoundation):
     """Foundation object from SleepIQ API."""
+
+    def __init__(self, api: SleepIQAPI, bed_id: str) -> None:
+        """Initialize foundation object."""
+        super().__init__(api, bed_id)
+        self.supports_heidi_climate = False
+        self.supports_climatecool = False
 
     async def init_features(self) -> None:
         """Initialize all foundation features."""
@@ -124,18 +132,29 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
 
     async def init_core_climates(self) -> None:
         """Initialize list of core climates available on foundation."""
-        bed_model = getattr(self, "bed_model", None)
-        key = "GetClimatePresence" if bed_model == "CLIMATECOOL" else "GetHeidiPresence"
-        climate_cls = (
-            SleepIQFuzionClimateCoolCoreClimate
-            if bed_model == "CLIMATECOOL"
-            else SleepIQFuzionCoreClimate
-        )
+        self.supports_heidi_climate = False
+        self.supports_climatecool = False
 
         for side in [Side.LEFT, Side.RIGHT]:
-            result = await self._api.bamkey(self.bed_id, key, args=[SIDES_FULL[side].lower()])
-            if result in ("true", "1"):
-                self.core_climates.append(climate_cls(self._api, self.bed_id, side, 0, 0))
+            heidi = await self._api.bamkey(
+                self.bed_id, "GetHeidiPresence", args=[SIDES_FULL[side].lower()]
+            )
+            if heidi in ("true", "1"):
+                self.core_climates.append(
+                    SleepIQFuzionCoreClimate(self._api, self.bed_id, side, 0, 0)
+                )
+                self.supports_heidi_climate = True
+
+            climate = await self._api.bamkey(
+                self.bed_id, "GetClimatePresence", args=[SIDES_FULL[side].lower()]
+            )
+            if climate in ("true", "1"):
+                self.core_climates.append(
+                    SleepIQFuzionClimateCoolCoreClimate(
+                        self._api, self.bed_id, side, 0, 0
+                    )
+                )
+                self.supports_climatecool = True
 
     async def update_core_climates(self) -> None:
         if not self.core_climates:
