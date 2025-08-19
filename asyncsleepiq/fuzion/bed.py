@@ -46,13 +46,3 @@ class SleepIQFuzionBed(SleepIQBed):
         arg = "paused" if mode else "active"
         await self._api.bamkey(self.id, "SetSleepiqPrivacyState", args=[arg])
         self.paused = mode
-
-    @property
-    def supports_heidi_climate(self) -> bool:
-        """Return True if Heidi climate control is supported."""
-        return getattr(self.foundation, "supports_heidi_climate", False)
-
-    @property
-    def supports_climatecool(self) -> bool:
-        """Return True if ClimateCool control is supported."""
-        return getattr(self.foundation, "supports_climatecool", False)

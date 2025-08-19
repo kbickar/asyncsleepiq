@@ -49,12 +49,6 @@ FEATURE_NAMES = [
 class SleepIQFuzionFoundation(SleepIQFoundation):
     """Foundation object from SleepIQ API."""
 
-    def __init__(self, api: SleepIQAPI, bed_id: str) -> None:
-        """Initialize foundation object."""
-        super().__init__(api, bed_id)
-        self.supports_heidi_climate = False
-        self.supports_climatecool = False
-
     async def init_features(self) -> None:
         """Initialize all foundation features."""
         if self.features["underbedLightEnableFlag"]:
@@ -132,8 +126,6 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
 
     async def init_core_climates(self) -> None:
         """Initialize list of core climates available on foundation."""
-        self.supports_heidi_climate = False
-        self.supports_climatecool = False
 
         for side in [Side.LEFT, Side.RIGHT]:
             heidi = await self._api.bamkey(
@@ -143,7 +135,6 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
                 self.core_climates.append(
                     SleepIQFuzionCoreClimate(self._api, self.bed_id, side, 0, 0)
                 )
-                self.supports_heidi_climate = True
 
             climate = await self._api.bamkey(
                 self.bed_id, "GetClimatePresence", args=[SIDES_FULL[side].lower()]
@@ -154,7 +145,6 @@ class SleepIQFuzionFoundation(SleepIQFoundation):
                         self._api, self.bed_id, side, 0, 0
                     )
                 )
-                self.supports_climatecool = True
 
     async def update_core_climates(self) -> None:
         if not self.core_climates:
