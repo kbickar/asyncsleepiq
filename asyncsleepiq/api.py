@@ -1,4 +1,5 @@
 """API interface base class."""
+
 from __future__ import annotations
 
 import asyncio
@@ -121,7 +122,7 @@ class SleepIQAPI:
             "ClientID": "2oa5825venq9kek1dnrhfp7rdh",
         }
         async with self._session.post(
-            "https://l06it26kuh.execute-api.us-east-1.amazonaws.com/Prod/v1/token",
+            "https://ecim.sleepnumber.com/v1/token",
             headers=self._headers,
             timeout=TIMEOUT,
             json=auth_data,
