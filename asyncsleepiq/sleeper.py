@@ -25,11 +25,16 @@ class SleepIQSleeper:
         self.sleep_number = 0
         self.fav_sleep_number = 0
 
-        # Sleep health metrics
+        # Sleep health metrics - aggregate averages across all sessions
         self.sleep_duration: int | None = None  # Total time in bed (seconds)
-        self.sleep_score: int | None = None  # SleepIQ score (0-100)
+        self.sleep_score: int | None = None  # Average SleepIQ score (0-100)
         self.heart_rate: int | None = None  # Average heart rate (bpm)
         self.respiratory_rate: int | None = None  # Average respiratory rate (breaths/min)
+
+        # Most recent session values (from last sleep session)
+        self.sleep_score_recent: int | None = None  # Most recent session's SleepIQ score
+        self.heart_rate_recent: int | None = None  # Most recent session's heart rate (bpm)
+        self.respiratory_rate_recent: int | None = None  # Most recent session's respiratory rate (breaths/min)
         self.hrv: int | None = None  # Heart rate variability (ms) - may not be available for all beds
 
     def __str__(self) -> str:
@@ -79,23 +84,29 @@ class SleepIQSleeper:
     async def fetch_sleep_data(self, date: str | None = None) -> None:
         """Fetch sleep health data for this sleeper.
 
-        Retrieves sleep metrics including duration, sleep score (SleepIQ),
-        average heart rate, average respiratory rate, and HRV for a specific date.
+        Retrieves sleep metrics including duration, aggregate averages across all sessions,
+        and most recent session values for a specific date.
 
         Args:
             date: Date string in format "YYYY-MM-DDTHH:MM:SS".
                   If None, fetches data for yesterday (the most recent completed sleep session).
 
-        Updates:
-            sleep_duration: Total time in bed (seconds)
-            sleep_score: SleepIQ score (0-100)
-            heart_rate: Average heart rate during sleep (bpm)
-            respiratory_rate: Average respiratory rate during sleep (breaths/min)
-            hrv: Heart rate variability (ms) - Note: API inconsistency, may not be available for all beds
+        Updates (Aggregate Averages):
+            sleep_duration: Total time in bed across all sessions (seconds)
+            sleep_score: Average SleepIQ score across all sessions (0-100)
+            heart_rate: Average heart rate across all sessions (bpm)
+            respiratory_rate: Average respiratory rate across all sessions (breaths/min)
+
+        Updates (Most Recent Session):
+            sleep_score_recent: SleepIQ score from most recent/longest session (0-100)
+            heart_rate_recent: Heart rate from most recent/longest session (bpm)
+            respiratory_rate_recent: Respiratory rate from most recent/longest session (breaths/min)
+            hrv: Heart rate variability from most recent/longest session (ms)
 
         Note:
             The SleepIQ API is inconsistent across bed models/firmware versions.
-            Some fields like avgSleepIQ or hrv may not be present in all responses.
+            Field names vary (avgSleepIQ vs sleepIQAvg, etc.) and some fields like
+            hrv may not be present in all responses.
         """
         if date is None:
             from datetime import datetime, timedelta
@@ -107,28 +118,34 @@ class SleepIQSleeper:
             "sleeper": self.sleeper_id,
             "includeSlices": "true"
         }
-        param_str = "&".join(f"{k}={v}" for k, v in params.items())
-        endpoint = f"sleepData?{param_str}"
 
-        data = await self.api.get(endpoint)
+        data = await self.api.get("sleepData", params=params)
 
         if data:
             # NOTE: totalSleepSessionTime is always 0, use inBed instead for duration
             self.sleep_duration = data.get("inBed")
-            self.sleep_score = data.get("avgSleepIQ")
-            self.heart_rate = data.get("avgHeartRate")
-            self.respiratory_rate = data.get("avgRespirationRate")
 
-            # HRV is in the sessions block (API inconsistency - not available for all beds)
-            # Look for the longest session or first finalized session
-            if data.get("sleepData"):
-                for day_data in data["sleepData"]:
-                    if day_data.get("sessions"):
-                        # Find the longest session (primary sleep session)
-                        longest_session = None
-                        for session in day_data["sessions"]:
-                            if session.get("longest") or not longest_session:
-                                longest_session = session
+            # Handle API field name variations across bed models/firmware
+            # Some return avgSleepIQ, others sleepIQAvg, etc.
+            self.sleep_score = data.get("avgSleepIQ") or data.get("sleepIQAvg")
+            self.heart_rate = data.get("avgHeartRate") or data.get("heartRateAvg")
+            self.respiratory_rate = data.get("avgRespirationRate") or data.get("respirationRateAvg")
 
-                        if longest_session:
-                            self.hrv = longest_session.get("hrv")
+            # Extract most recent session values
+            if data.get("sleepData") and len(data["sleepData"]) > 0:
+                # Get the last day's data (most recent)
+                last_day = data["sleepData"][-1]
+                if last_day.get("sessions") and len(last_day["sessions"]) > 0:
+                    # Find the longest session (primary sleep session)
+                    longest_session = None
+                    for session in last_day["sessions"]:
+                        if session.get("longest"):
+                            longest_session = session
+                            break
+
+                    if longest_session:
+                        # sleepQuotient is the session-level SleepIQ score
+                        self.sleep_score_recent = longest_session.get("sleepQuotient")
+                        self.heart_rate_recent = longest_session.get("avgHeartRate")
+                        self.respiratory_rate_recent = longest_session.get("avgRespirationRate")
+                        self.hrv = longest_session.get("hrv")
