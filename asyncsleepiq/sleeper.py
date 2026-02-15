@@ -25,6 +25,12 @@ class SleepIQSleeper:
         self.sleep_number = 0
         self.fav_sleep_number = 0
 
+        # Sleep health metrics
+        self.sleep_duration: int | None = None  # Total time in bed (seconds)
+        self.sleep_score: int | None = None  # SleepIQ score (0-100)
+        self.heart_rate: int | None = None  # Average heart rate (bpm)
+        self.respiratory_rate: int | None = None  # Average respiratory rate (breaths/min)
+
     def __str__(self) -> str:
         """Return string representation."""
         return f"SleepIQSleeper[{self.side}]({self.name}, in_bed={self.in_bed}, sn={self.sleep_number})"
@@ -68,3 +74,41 @@ class SleepIQSleeper:
         """Update fav_sleep_number from API."""
         json = await self.api.get("bed/" + self.bed_id + "/sleepNumberFavorite")
         self.fav_sleep_number = json["sleepNumberFavorite" + self.side_full]
+
+    async def fetch_sleep_data(self, date: str | None = None) -> None:
+        """Fetch sleep health data for this sleeper.
+
+        Retrieves sleep metrics including duration, sleep score (SleepIQ),
+        average heart rate, and average respiratory rate for a specific date.
+
+        Args:
+            date: Date string in format "YYYY-MM-DDTHH:MM:SS".
+                  If None, fetches data for yesterday (the most recent completed sleep session).
+
+        Updates:
+            sleep_duration: Total time in bed (seconds)
+            sleep_score: SleepIQ score (0-100)
+            heart_rate: Average heart rate during sleep (bpm)
+            respiratory_rate: Average respiratory rate during sleep (breaths/min)
+        """
+        if date is None:
+            from datetime import datetime, timedelta
+            date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
+
+        params = {
+            "date": date,
+            "interval": "D1",
+            "sleeper": self.sleeper_id,
+            "includeSlices": "false"
+        }
+        param_str = "&".join(f"{k}={v}" for k, v in params.items())
+        endpoint = f"sleepData?{param_str}"
+
+        data = await self.api.get(endpoint)
+
+        if data:
+            # NOTE: totalSleepSessionTime is always 0, use inBed instead for duration
+            self.sleep_duration = data.get("inBed")
+            self.sleep_score = data.get("avgSleepIQ")
+            self.heart_rate = data.get("avgHeartRate")
+            self.respiratory_rate = data.get("avgRespirationRate")
