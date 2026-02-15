@@ -47,12 +47,8 @@ class SleepIQSleeper:
         self.sleep_number = 0
         self.fav_sleep_number = 0
 
-        # Sleep health metrics (prefers most recent session, falls back to aggregates)
-        self.sleep_duration: int | None = None  # Total time in bed (seconds)
-        self.sleep_score: int | None = None  # SleepIQ score (0-100)
-        self.heart_rate: int | None = None  # Heart rate (bpm)
-        self.respiratory_rate: int | None = None  # Respiratory rate (breaths/min)
-        self.hrv: int | None = None  # Heart rate variability (ms) - may not be available for all beds
+        # Sleep health metrics
+        self.sleep_data = SleepData()
 
     def __str__(self) -> str:
         """Return string representation."""
@@ -168,13 +164,13 @@ class SleepIQSleeper:
         return sleep_data
 
     async def fetch_sleep_data(self) -> None:
-        """Fetch sleep data for the most recent night and store in sleeper attributes.
+        """Fetch sleep data for the most recent night and store in sleeper.sleep_data.
 
-        Updates the sleeper's sleep health attributes with data from the most recent
+        Updates the sleeper's sleep_data attribute with data from the most recent
         completed sleep session (yesterday).
 
-        Updates:
-            sleep_duration: Total time in bed (seconds)
+        Updates sleeper.sleep_data with:
+            duration: Total time in bed (seconds)
             sleep_score: SleepIQ score (0-100)
             heart_rate: Heart rate (bpm)
             respiratory_rate: Respiratory rate (breaths/min)
@@ -184,8 +180,4 @@ class SleepIQSleeper:
         sleep_data = await self.get_sleep_data(yesterday)
 
         if sleep_data:
-            self.sleep_duration = sleep_data.duration
-            self.sleep_score = sleep_data.sleep_score
-            self.heart_rate = sleep_data.heart_rate
-            self.respiratory_rate = sleep_data.respiratory_rate
-            self.hrv = sleep_data.hrv
+            self.sleep_data = sleep_data
