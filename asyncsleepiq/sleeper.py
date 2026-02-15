@@ -30,6 +30,7 @@ class SleepIQSleeper:
         self.sleep_score: int | None = None  # SleepIQ score (0-100)
         self.heart_rate: int | None = None  # Average heart rate (bpm)
         self.respiratory_rate: int | None = None  # Average respiratory rate (breaths/min)
+        self.hrv: int | None = None  # Heart rate variability (ms) - may not be available for all beds
 
     def __str__(self) -> str:
         """Return string representation."""
@@ -79,7 +80,7 @@ class SleepIQSleeper:
         """Fetch sleep health data for this sleeper.
 
         Retrieves sleep metrics including duration, sleep score (SleepIQ),
-        average heart rate, and average respiratory rate for a specific date.
+        average heart rate, average respiratory rate, and HRV for a specific date.
 
         Args:
             date: Date string in format "YYYY-MM-DDTHH:MM:SS".
@@ -90,6 +91,11 @@ class SleepIQSleeper:
             sleep_score: SleepIQ score (0-100)
             heart_rate: Average heart rate during sleep (bpm)
             respiratory_rate: Average respiratory rate during sleep (breaths/min)
+            hrv: Heart rate variability (ms) - Note: API inconsistency, may not be available for all beds
+
+        Note:
+            The SleepIQ API is inconsistent across bed models/firmware versions.
+            Some fields like avgSleepIQ or hrv may not be present in all responses.
         """
         if date is None:
             from datetime import datetime, timedelta
@@ -112,3 +118,17 @@ class SleepIQSleeper:
             self.sleep_score = data.get("avgSleepIQ")
             self.heart_rate = data.get("avgHeartRate")
             self.respiratory_rate = data.get("avgRespirationRate")
+
+            # HRV is in the sessions block (API inconsistency - not available for all beds)
+            # Look for the longest session or first finalized session
+            if data.get("sleepData"):
+                for day_data in data["sleepData"]:
+                    if day_data.get("sessions"):
+                        # Find the longest session (primary sleep session)
+                        longest_session = None
+                        for session in day_data["sessions"]:
+                            if session.get("longest") or not longest_session:
+                                longest_session = session
+
+                        if longest_session:
+                            self.hrv = longest_session.get("hrv")
