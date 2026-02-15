@@ -13,6 +13,6 @@ from .foot_warmer import SleepIQFootWarmer
 from .foundation import SleepIQFoundation
 from .light import SleepIQLight
 from .preset import SleepIQPreset
-from .sleeper import SleepIQSleeper
+from .sleeper import SleepIQSleeper, SleepData
 
 __version__ = "{{VERSION_PLACEHOLDER}}"

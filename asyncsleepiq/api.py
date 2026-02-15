@@ -55,7 +55,12 @@ class SleepIQAPI:
         self.password = password
         self.key = ""
         self._session = client_session or ClientSession()
-        self._headers = {"User-Agent": random_user_agent()}
+        self._headers = {
+            "User-Agent": random_user_agent(),
+            # Accept-Version required for HRV and other advanced sleep metrics
+            # Version 5.3.30 confirmed working as of 2026-02
+            "Accept-Version": "5.3.30",
+        }
         self._login_method = login_method
         self._account_id = ""
 
