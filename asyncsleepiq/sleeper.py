@@ -105,7 +105,7 @@ class SleepIQSleeper:
             "date": date,
             "interval": "D1",
             "sleeper": self.sleeper_id,
-            "includeSlices": "false"
+            "includeSlices": "true"
         }
         param_str = "&".join(f"{k}={v}" for k, v in params.items())
         endpoint = f"sleepData?{param_str}"
