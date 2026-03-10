@@ -127,8 +127,8 @@ class SleepIQSleeper:
 
         sleep_data = SleepData()
 
-        # Get duration - totalSleepSessionTime is always 0, use inBed instead
-        sleep_data.duration = data.get("inBed")
+        # Get duration - totalSleepSessionTime is always 0, use inBedTotal instead
+        sleep_data.duration = data.get("inBedTotal")
 
         # Get aggregate averages (handle API field name variations)
         # Some return avgSleepIQ, others sleepIQAvg, etc.
@@ -181,3 +181,4 @@ class SleepIQSleeper:
 
         if sleep_data:
             self.sleep_data = sleep_data
+
