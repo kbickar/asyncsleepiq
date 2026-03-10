@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from .api import SleepIQAPI
 from .consts import SIDES_FULL, SIDES_SHORT, Side
@@ -167,7 +167,7 @@ class SleepIQSleeper:
         """Fetch sleep data for the most recent night and store in sleeper.sleep_data.
 
         Updates the sleeper's sleep_data attribute with data from the most recent
-        completed sleep session (yesterday).
+        completed sleep session (last_night).
 
         Updates sleeper.sleep_data with:
             duration: Total time in bed (seconds)
@@ -176,8 +176,8 @@ class SleepIQSleeper:
             respiratory_rate: Respiratory rate (breaths/min)
             hrv: Heart rate variability (ms)
         """
-        yesterday = datetime.now() - timedelta(days=1)
-        sleep_data = await self.get_sleep_data(yesterday)
+        last_night = datetime.now()
+        sleep_data = await self.get_sleep_data(last_night)
 
         if sleep_data:
             self.sleep_data = sleep_data
