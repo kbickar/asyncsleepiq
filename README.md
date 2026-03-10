@@ -52,7 +52,13 @@ async def main():
     print("Stopping pump...")
     await bed.stop_pump()
 
-asyncio.get_event_loop().run_until_complete(main())
+    return api
+
+if __name__ == "__main__":
+    loop_ = asyncio.get_event_loop()
+    api_= loop_.run_until_complete(main())
+    loop_.run_until_complete(api_.close_session())
+    loop_.close()
 ```
 
 ## Future Development
