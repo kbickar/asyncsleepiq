@@ -27,7 +27,7 @@ from asyncsleepiq import AsyncSleepIQ, LOGIN_KEY, LOGIN_COOKIE
 email = "user@example.com"
 password = "passw0rd"
 
-async def main():        
+async def main():
     api = AsyncSleepIQ(login_method=LOGIN_COOKIE)
 
     print(f"Logging in as {email}...")
@@ -37,15 +37,15 @@ async def main():
     await api.init_beds()
     await api.fetch_bed_statuses()
     print("Beds:")
-    for bed in api.beds.values(): 
+    for bed in api.beds.values():
         print(bed)
 
     bed = list(api.beds.values())[0]
     await bed.fetch_pause_mode()
     print (f"Pause mode: {bed.paused}")
-    await bed.set_pause_mode(not bed.paused)   
+    await bed.set_pause_mode(not bed.paused)
     await bed.fetch_pause_mode()
-    print (f"New Pause mode: {bed.paused}") 
+    print (f"New Pause mode: {bed.paused}")
 
     print("Calibrating...")
     await bed.calibrate()
