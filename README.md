@@ -18,7 +18,7 @@ There are two authentication methods available: The older API with key parameter
 
 The `login()` function should only be called once when the program is started, the `fetch_bed_statuses()` can be called more frequently to get the bed state.  When implementing, do not poll the API by calling `login` each time, instead keep the same `AsyncSleepIQ` object and fetch data as needed.  The library will re-authenticate automtically if the original authentication expires. 
 
-Here is a full example
+Here is a full example:
 
 ```python
 import asyncio
@@ -56,7 +56,7 @@ async def main():
 
 if __name__ == "__main__":
     loop_ = asyncio.get_event_loop()
-    api_= loop_.run_until_complete(main())
+    api_ = loop_.run_until_complete(main())
     loop_.run_until_complete(api_.close_session())
     loop_.close()
 ```
