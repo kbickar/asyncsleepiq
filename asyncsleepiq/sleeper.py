@@ -12,19 +12,31 @@ from .consts import SIDES_FULL, SIDES_SHORT, Side
 class SleepData:
     """Sleep data for a single night.
 
-    Contains both aggregate averages and most recent session values.
+    Contains both aggregate averages and primary session values.
+    The primary session is the longest session recorded for the night.
     Note: API field availability varies by bed model/firmware version.
     """
+    # Session timing (from primary/longest session)
+    start_date: str | None = None  # Session start timestamp (ISO 8601)
+    end_date: str | None = None    # Session end timestamp (ISO 8601)
+
     # Duration
-    duration: int | None = None  # Total time in bed (seconds)
+    duration: int | None = None       # Time in bed for primary session (seconds)
+    session_count: int | None = None  # Total number of sleep sessions recorded
 
     # Sleep quality scores
-    sleep_score: int | None = None  # SleepIQ score (0-100) - aggregate or most recent
+    sleep_score: int | None = None  # SleepIQ score (0-100) - primary session
 
-    # Vital signs
-    heart_rate: int | None = None  # Heart rate (bpm) - aggregate or most recent
-    respiratory_rate: int | None = None  # Respiratory rate (breaths/min) - aggregate or most recent
-    hrv: int | None = None  # Heart rate variability (ms) - from most recent session
+    # Vital signs (from primary session)
+    heart_rate: int | None = None        # Heart rate (bpm)
+    respiratory_rate: int | None = None  # Respiratory rate (breaths/min)
+    hrv: int | None = None               # Heart rate variability (ms)
+
+    # Sleep breakdown (seconds, from primary session)
+    restful: int | None = None            # Time spent restful
+    restless: int | None = None           # Time spent restless
+    out_of_bed: int | None = None         # Time spent out of bed
+    fall_asleep_period: int | None = None # Time to fall asleep
 
 
 class SleepIQSleeper:
@@ -57,7 +69,7 @@ class SleepIQSleeper:
     def __repr__(self) -> str:
         """Return string representation."""
         return f"SleepIQSleeper[{self.side}]({self.name}, in_bed={self.in_bed}, sn={self.sleep_number})"
-    
+
     async def update(self) -> None:
         """Updates sleeper with latest data."""
         pass
@@ -72,7 +84,7 @@ class SleepIQSleeper:
             raise ValueError("Invalid SleepNumber, must be between 0 and 100")
         setting = int(round(setting / 5)) * 5
         data = {
-            "sleepNumber": setting, 
+            "sleepNumber": setting,
             "side": SIDES_SHORT[self.side],
         }
         await self.api.put("bed/" + self.bed_id + "/sleepNumber", data)
@@ -97,8 +109,8 @@ class SleepIQSleeper:
     async def get_sleep_data(self, date: datetime) -> SleepData | None:
         """Get sleep health data for a specific date.
 
-        Retrieves sleep metrics for the given date, using aggregate averages
-        when available, falling back to most recent session values.
+        Retrieves sleep metrics for the given date from the primary (longest)
+        sleep session recorded that night.
 
         Args:
             date: Date to fetch sleep data for.
@@ -117,7 +129,7 @@ class SleepIQSleeper:
             "date": date_str,
             "interval": "D1",
             "sleeper": self.sleeper_id,
-            "includeSlices": "true"
+            "includeSlices": "false",
         }
 
         data = await self.api.get("sleepData", params=params)
@@ -130,36 +142,62 @@ class SleepIQSleeper:
         # Get duration - totalSleepSessionTime is always 0, use inBedTotal instead
         sleep_data.duration = data.get("inBedTotal")
 
-        # Get aggregate averages (handle API field name variations)
-        # Some return avgSleepIQ, others sleepIQAvg, etc.
-        avg_sleep_score = data.get("avgSleepIQ") or data.get("sleepIQAvg")
-        avg_heart_rate = data.get("avgHeartRate") or data.get("heartRateAvg")
-        avg_respiratory_rate = data.get("avgRespirationRate") or data.get("respirationRateAvg")
+        # Count total sessions across all days returned
+        all_sessions = []
+        for day in data.get("sleepData", []):
+            all_sessions.extend(day.get("sessions", []))
+        sleep_data.session_count = len(all_sessions) or None
 
-        # Try to get most recent session values for better accuracy
-        recent_sleep_score = None
-        recent_heart_rate = None
-        recent_respiratory_rate = None
-        recent_hrv = None
+        # Find the primary (longest) session
+        primary_session = None
+        for session in all_sessions:
+            if session.get("longest"):
+                primary_session = session
+                break
+        # Fallback: pick the session with the greatest totalSleepSessionTime
+        if primary_session is None and all_sessions:
+            primary_session = max(
+                all_sessions,
+                key=lambda s: s.get("totalSleepSessionTime", 0),
+            )
 
-        if data.get("sleepData"):
-            # Get the last day's data (most recent)
-            last_day = data["sleepData"][-1]
-            if last_day.get("sessions"):
-                # Find the longest session (primary sleep session)
-                for session in last_day["sessions"]:
-                    if session.get("longest"):
-                        recent_sleep_score = session.get("sleepQuotient")
-                        recent_heart_rate = session.get("avgHeartRate")
-                        recent_respiratory_rate = session.get("avgRespirationRate")
-                        recent_hrv = session.get("hrv")
-                        break
+        if primary_session:
+            # Timing
+            sleep_data.start_date = primary_session.get("startDate")
+            sleep_data.end_date = primary_session.get("endDate")
 
-        # Prefer most recent session values, fall back to aggregates
-        sleep_data.sleep_score = recent_sleep_score or avg_sleep_score
-        sleep_data.heart_rate = recent_heart_rate or avg_heart_rate
-        sleep_data.respiratory_rate = recent_respiratory_rate or avg_respiratory_rate
-        sleep_data.hrv = recent_hrv
+            # Duration: use session-level inBed (time physically in bed, seconds).
+            # Note: the top-level aggregate field is inBedTotal/inBedAvg, not inBed,
+            # so data.get("inBed") always returns None — use the session field instead.
+            sleep_data.duration = primary_session.get("inBed")
+
+            # Sleep quality
+            sleep_data.sleep_score = primary_session.get("sleepQuotient")
+
+            # Vital signs
+            hr = primary_session.get("avgHeartRate")
+            sleep_data.heart_rate = hr if hr and hr > 0 else None
+            sleep_data.respiratory_rate = primary_session.get("avgRespirationRate")
+            sleep_data.hrv = primary_session.get("hrv")
+
+            # Sleep breakdown
+            sleep_data.restful = primary_session.get("restful")
+            sleep_data.restless = primary_session.get("restless")
+            sleep_data.out_of_bed = primary_session.get("outOfBed")
+            fap = primary_session.get("fallAsleepPeriod")
+            sleep_data.fall_asleep_period = fap if fap and fap >= 0 else None
+        else:
+            # No session data — fall back to top-level aggregates
+            sleep_data.sleep_score = (
+                data.get("avgSleepIQ") or data.get("sleepIQAvg")
+            )
+            sleep_data.heart_rate = (
+                data.get("avgHeartRate") or data.get("heartRateAvg")
+            )
+            sleep_data.respiratory_rate = (
+                data.get("avgRespirationRate") or data.get("respirationRateAvg")
+            )
+            sleep_data.duration = data.get("inBedTotal") or data.get("inBedAvg")
 
         return sleep_data
 
@@ -169,13 +207,23 @@ class SleepIQSleeper:
         Updates the sleeper's sleep_data attribute with data from the most recent
         completed sleep session (last_night).
 
-        Updates sleeper.sleep_data with:
-            duration: Total time in bed (seconds)
+        Updated fields in sleeper.sleep_data:
+            start_date: Session start timestamp (ISO 8601)
+            end_date: Session end timestamp (ISO 8601)
+            duration: Time in bed for primary session (seconds)
+            session_count: Total number of sessions recorded
             sleep_score: SleepIQ score (0-100)
             heart_rate: Heart rate (bpm)
             respiratory_rate: Respiratory rate (breaths/min)
             hrv: Heart rate variability (ms)
+            restful: Time spent restful (seconds)
+            restless: Time spent restless (seconds)
+            out_of_bed: Time spent out of bed (seconds)
+            fall_asleep_period: Time to fall asleep (seconds)
         """
+        # Pass today's date — the API uses UTC internally, so "today" correctly
+        # returns last night's completed sleep session. Passing "yesterday" causes
+        # an off-by-one that returns data from 2 nights ago for UTC-offset users.
         last_night = datetime.now()
         sleep_data = await self.get_sleep_data(last_night)
 
