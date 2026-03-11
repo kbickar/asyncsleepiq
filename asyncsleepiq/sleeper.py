@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from .api import SleepIQAPI
 from .consts import SIDES_FULL, SIDES_SHORT, Side
@@ -218,8 +218,10 @@ class SleepIQSleeper:
             out_of_bed: Time spent out of bed (seconds)
             fall_asleep_period: Time to fall asleep (seconds)
         """
-        yesterday = datetime.now() - timedelta(days=1)
-        sleep_data = await self.get_sleep_data(yesterday)
+        # Pass today's date — the API uses UTC internally, so "today" correctly
+        # returns last night's completed sleep session. Passing "yesterday" causes
+        # an off-by-one that returns data from 2 nights ago for UTC-offset users.
+        sleep_data = await self.get_sleep_data(datetime.now())
 
         if sleep_data:
             self.sleep_data = sleep_data
