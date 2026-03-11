@@ -139,6 +139,9 @@ class SleepIQSleeper:
 
         sleep_data = SleepData()
 
+        # Get duration - totalSleepSessionTime is always 0, use inBedTotal instead
+        sleep_data.duration = data.get("inBedTotal")
+
         # Count total sessions across all days returned
         all_sessions = []
         for day in data.get("sleepData", []):
@@ -202,7 +205,7 @@ class SleepIQSleeper:
         """Fetch sleep data for the most recent night and store in sleeper.sleep_data.
 
         Updates the sleeper's sleep_data attribute with data from the most recent
-        completed sleep session (yesterday).
+        completed sleep session (last_night).
 
         Updated fields in sleeper.sleep_data:
             start_date: Session start timestamp (ISO 8601)
@@ -221,7 +224,9 @@ class SleepIQSleeper:
         # Pass today's date — the API uses UTC internally, so "today" correctly
         # returns last night's completed sleep session. Passing "yesterday" causes
         # an off-by-one that returns data from 2 nights ago for UTC-offset users.
-        sleep_data = await self.get_sleep_data(datetime.now())
+        last_night = datetime.now()
+        sleep_data = await self.get_sleep_data(last_night)
 
         if sleep_data:
             self.sleep_data = sleep_data
+
