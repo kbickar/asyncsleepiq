@@ -6,6 +6,7 @@ from .consts import *
 from .core_climate import SleepIQCoreClimate
 from .exceptions import (
     SleepIQAPIException,
+    SleepIQConnectionException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )

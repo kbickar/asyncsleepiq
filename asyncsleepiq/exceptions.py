@@ -2,11 +2,20 @@
 
 
 class SleepIQLoginException(Exception):
-    """Exception in Login process."""
+    """Bad credentials or rejected login (non-retryable)."""
+
+
+class SleepIQConnectionException(SleepIQLoginException):
+    """Transient connection or transport failure during login (retryable).
+
+    Subclasses SleepIQLoginException for backward compatibility: callers
+    that catch SleepIQLoginException continue to work, while callers that
+    need to distinguish transient failures can catch this subclass first.
+    """
 
 
 class SleepIQTimeoutException(Exception):
-    """Timeout in Login process."""
+    """Timeout during an API or login call."""
 
 
 class SleepIQAPIException(Exception):
