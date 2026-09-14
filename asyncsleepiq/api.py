@@ -13,6 +13,7 @@ from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from .consts import API_URL, BAMKEY, LOGIN_KEY, TIMEOUT
 from .exceptions import (
     SleepIQAPIException,
+    SleepIQConnectionException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
@@ -40,6 +41,14 @@ def random_user_agent() -> str:
     return template.format(os=random.choice(list(os.values())), ua=random.choice(list(uas.values())))
 
 
+def _check_retryable_status(resp: ClientResponse) -> None:
+    """Raise SleepIQConnectionException for retryable HTTP status codes."""
+    if resp.status == 429 or resp.status >= 500:
+        raise SleepIQConnectionException(
+            f"Retryable response code: {resp.status}"
+        )
+
+
 class SleepIQAPI:
     """API interface base class."""
 
@@ -63,6 +72,8 @@ class SleepIQAPI:
         }
         self._login_method = login_method
         self._account_id = ""
+        self._login_lock = asyncio.Lock()
+        self._login_generation = 0
 
     async def close_session(self) -> None:
         """Close the API session."""
@@ -70,7 +81,13 @@ class SleepIQAPI:
             await self._session.close()
 
     async def login(self, email: str | None = None, password: str | None = None) -> None:
-        """Login using the with the email/password provided or stored."""
+        """Login using the email/password provided or stored."""
+        async with self._login_lock:
+            await self._do_login(email, password)
+            self._login_generation += 1
+
+    async def _do_login(self, email: str | None = None, password: str | None = None) -> None:
+        """Perform the actual login without locking."""
         if not email:
             email = self.email
         if not password:
@@ -85,14 +102,16 @@ class SleepIQAPI:
                 await self.login_cookie(email, password)
 
         except asyncio.TimeoutError as ex:
-            # timed out
             raise SleepIQTimeoutException("API call timed out") from ex
-        except SleepIQTimeoutException as ex:
-            raise ex
+        except SleepIQTimeoutException:
+            raise
+        except SleepIQLoginException:
+            raise
+        except SleepIQConnectionException:
+            raise
         except Exception as ex:
-            raise SleepIQLoginException(f"Connection failure: {ex}") from ex
+            raise SleepIQConnectionException(f"Connection failure: {ex}") from ex
 
-        # store in case we need to login again
         self.email = email
         self.password = password
 
@@ -108,6 +127,7 @@ class SleepIQAPI:
                 raise SleepIQLoginException("Incorrect username or password")
             if resp.status == 403:
                 raise SleepIQLoginException("User Agent is blocked. May need to update GenUserAgent data?")
+            _check_retryable_status(resp)
             if resp.status not in (200, 201):
                 raise SleepIQLoginException(
                     "Unexpected response code: {code}\n{body}".format(
@@ -136,6 +156,7 @@ class SleepIQAPI:
                 raise SleepIQLoginException("Incorrect username or password")
             if resp.status == 403:
                 raise SleepIQLoginException("User Agent is blocked. May need to update GenUserAgent data?")
+            _check_retryable_status(resp)
             if resp.status not in (200, 201):
                 raise SleepIQLoginException(
                     "Unexpected response code: {code}\n{body}".format(
@@ -148,6 +169,7 @@ class SleepIQAPI:
             self._headers["Authorization"] = token
 
         async with self._session.get(API_URL + "/user/jwt", headers=self._headers, timeout=TIMEOUT) as resp:
+            _check_retryable_status(resp)
             if resp.status not in (200, 201):
                 raise SleepIQLoginException(
                     "Unexpected response code: {code}\n{body}".format(
@@ -193,6 +215,7 @@ class SleepIQAPI:
     ) -> bool | dict[str, Any] | Any:
         """Make a request to the API."""
         timeout = ClientTimeout(total=TIMEOUT)
+        gen_before_request = self._login_generation
         params["_k"] = self.key
         try:
             async with make_request(
@@ -207,11 +230,22 @@ class SleepIQAPI:
 
                 if resp.status != 200:
                     if retry and resp.status in (401, 404):
-                        # login and try again
-                        await self.login()
+                        await self._retry_login(gen_before_request)
                         return await self.__make_request(make_request, url, json, params, False)
                     raise SleepIQAPIException(resp.status, f"API call error response {resp.status}\n{resp.text}")
                 return await resp.json()
         except asyncio.TimeoutError as ex:
-            # timed out
             raise SleepIQTimeoutException("API call timed out") from ex
+
+    async def _retry_login(self, gen_at_request: int) -> None:
+        """Re-login for a 401 retry, unless another caller already refreshed the key.
+
+        gen_at_request is captured before the HTTP request was sent so a
+        caller whose 401 arrives after another caller already re-logged in
+        will see a newer generation and skip.
+        """
+        async with self._login_lock:
+            if self._login_generation != gen_at_request:
+                return
+            await self._do_login()
+            self._login_generation += 1
