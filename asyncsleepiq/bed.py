@@ -19,6 +19,7 @@ class SleepIQBed:
         self.name = data["name"]
         self.id = data["bedId"]
         self.mac_addr = data["macAddress"]
+        self.timezone: str | None = data.get("timezone")
         self.paused = False
         self.sleepers = [
             SleepIQSleeper(api, self.id, data[f"sleeper{SIDES_FULL[side]}Id"], side)
