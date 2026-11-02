@@ -58,6 +58,7 @@ class SleepIQSleeper:
         self.pressure = 0
         self.sleep_number = 0
         self.fav_sleep_number = 0
+        self.responsive_air = False
 
         # Sleep health metrics
         self.sleep_data = SleepData()
@@ -105,6 +106,21 @@ class SleepIQSleeper:
         """Update fav_sleep_number from API."""
         json = await self.api.get("bed/" + self.bed_id + "/sleepNumberFavorite")
         self.fav_sleep_number = json["sleepNumberFavorite" + self.side_full]
+
+    async def has_responsive_air(self) -> bool:
+        """Return whether the bed supports Responsive Air."""
+        return await self.api.check("bed/" + self.bed_id + "/responsiveAir")
+
+    async def set_responsive_air(self, enabled: bool) -> None:
+        """Turn Responsive Air (automatic firmness adjustment) on or off."""
+        data = {self.side_full.lower() + "SideEnabled": enabled}
+        await self.api.put("bed/" + self.bed_id + "/responsiveAir", data)
+        await self.fetch_responsive_air()
+
+    async def fetch_responsive_air(self) -> None:
+        """Update responsive_air from API."""
+        json = await self.api.get("bed/" + self.bed_id + "/responsiveAir")
+        self.responsive_air = json[self.side_full.lower() + "SideEnabled"]
 
     async def get_sleep_data(self, date: datetime) -> SleepData | None:
         """Get sleep health data for a specific date.
