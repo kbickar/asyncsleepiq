@@ -14,6 +14,7 @@ from .consts import (
     Speed,
 )
 from .light import SleepIQLight
+from .massage import SleepIQMassage
 from .foot_warmer import SleepIQFootWarmer
 from .preset import SleepIQPreset
 from .core_climate import SleepIQCoreClimate
@@ -28,6 +29,7 @@ class SleepIQFoundation:
         self.bed_id = bed_id
         self.lights: list[SleepIQLight] = []
         self.foot_warmers: list[SleepIQFootWarmer] = []
+        self.massages: list[SleepIQMassage] = []
         self.core_climates: list[SleepIQCoreClimate] = []
         self.features: dict[str, bool] = {
             "boardIsASingle": False,
@@ -54,6 +56,7 @@ class SleepIQFoundation:
         """Initialize all foundation features."""
         await self.init_lights()
         await self.init_foot_warmers()
+        await self.init_massages()
 
         if not self.type:
             return
@@ -66,6 +69,7 @@ class SleepIQFoundation:
         """Update all foundation data from API."""
         await self.update_lights()
         await self.update_foot_warmers()
+        await self.update_massages()
 
         if not self.type:
             return
@@ -89,6 +93,25 @@ class SleepIQFoundation:
         data = await self._api.get(f"bed/{self.bed_id}/foundation/footwarming")
         for foot_warmer in self.foot_warmers:
             await foot_warmer.update(data)
+
+    async def init_massages(self) -> None:
+        """Initialize the massage sides if the bed exposes the endpoint."""
+        if self.features["hasMassageAndLight"] and await self._api.check(
+            f"bed/{self.bed_id}/foundation/massage"
+        ):
+            self.massages = [SleepIQMassage(Side.LEFT), SleepIQMassage(Side.RIGHT)]
+            await self.update_massages()
+        else:
+            self.massages = []
+
+    async def update_massages(self) -> None:
+        """Refresh both massage sides with one request."""
+        if not self.massages:
+            return
+
+        data = await self._api.get(f"bed/{self.bed_id}/foundation/massage")
+        for massage in self.massages:
+            await massage.update(data)
 
     async def init_lights(self) -> None:
         """Initialize list of lights available on foundation."""
