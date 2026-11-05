@@ -13,6 +13,7 @@ from .exceptions import (
 from .foot_warmer import SleepIQFootWarmer
 from .foundation import SleepIQFoundation
 from .light import SleepIQLight
+from .massage import SleepIQMassage
 from .preset import SleepIQPreset
 from .sleeper import SleepIQSleeper, SleepData
 
