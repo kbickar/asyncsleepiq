@@ -1,18 +1,22 @@
 """Massage state from the SleepIQ API."""
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any
 
 from .consts import SIDES_FULL, Mode, Side, Speed
 
-_MassageEnum = TypeVar("_MassageEnum", Mode, Speed)
-
-
-def _enum_or_off(value: Any, off: _MassageEnum) -> _MassageEnum:
+def _speed(value: Any) -> Speed:
     try:
-        return type(off)(value)
+        return Speed(value)
     except ValueError:
-        return off
+        return Speed.OFF
+
+
+def _mode(value: Any) -> Mode:
+    try:
+        return Mode(value)
+    except ValueError:
+        return Mode.OFF
 
 
 class SleepIQMassage:
@@ -27,6 +31,14 @@ class SleepIQMassage:
         self.mode = Mode.OFF
         self.timer = 0
 
+    def __str__(self) -> str:
+        """Return the current massage state for debugging."""
+        return (f"SleepIQMassage[{SIDES_FULL[self.side]}]: "
+                f"{'On' if self.is_on else 'Off'}, foot={self.foot_speed.name}, "
+                f"head={self.head_speed.name}, mode={self.mode.name}, timer={self.timer}")
+
+    __repr__ = __str__
+
     async def update(self, data: dict[str, Any]) -> None:
         """Read this side's state and remaining minutes from the bed response."""
         side_data = data.get(f"{SIDES_FULL[self.side].lower()}Side")
@@ -34,8 +46,8 @@ class SleepIQMassage:
             return
 
         self.is_on = side_data.get("massageMotorStatus") == 1
-        self.foot_speed = _enum_or_off(side_data.get("footMassageMotorSpeed"), Speed.OFF)
-        self.head_speed = _enum_or_off(side_data.get("headMassageMotorSpeed"), Speed.OFF)
-        self.mode = _enum_or_off(side_data.get("waveMode"), Mode.OFF)
+        self.foot_speed = _speed(side_data.get("footMassageMotorSpeed"))
+        self.head_speed = _speed(side_data.get("headMassageMotorSpeed"))
+        self.mode = _mode(side_data.get("waveMode"))
         timer = side_data.get("massageTimer")
         self.timer = timer if type(timer) is int and timer >= 0 else 0

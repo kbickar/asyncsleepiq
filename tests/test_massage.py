@@ -49,8 +49,7 @@ def test_foundation_polls_both_sides_with_one_get_per_refresh(massage_response):
 
     async def refresh():
         await foundation.init_features()
-        assert api.get.await_args_list == [call(STATUS_URL)]
-        await foundation.update_foundation_status()
+        assert api.get.await_args_list == [call(MASSAGE_URL), call(STATUS_URL)]
         left, right = foundation.massages
         assert isinstance(left, SleepIQMassage)
         assert left.side is Side.LEFT
@@ -65,6 +64,8 @@ def test_foundation_polls_both_sides_with_one_get_per_refresh(massage_response):
         assert right.head_speed is Speed.OFF
         assert right.mode is Mode.SOOTHE
         assert right.timer == 57
+        assert str(left) == "SleepIQMassage[Left]: On, foot=LOW, head=OFF, mode=OFF, timer=12"
+        assert repr(left) == str(left)
 
         massage_response["leftSide"]["massageTimer"] = 11
         massage_response["rightSide"]["headMassageMotorSpeed"] = 3
@@ -75,7 +76,6 @@ def test_foundation_polls_both_sides_with_one_get_per_refresh(massage_response):
     asyncio.run(refresh())
     assert api.check.await_args_list.count(call(MASSAGE_URL)) == 1
     assert api.get.await_args_list == [
-        call(STATUS_URL),
         call(MASSAGE_URL),
         call(STATUS_URL),
         call(MASSAGE_URL),

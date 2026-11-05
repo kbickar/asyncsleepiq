@@ -100,6 +100,7 @@ class SleepIQFoundation:
             f"bed/{self.bed_id}/foundation/massage"
         ):
             self.massages = [SleepIQMassage(Side.LEFT), SleepIQMassage(Side.RIGHT)]
+            await self.update_massages()
         else:
             self.massages = []
 
