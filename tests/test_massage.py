@@ -207,13 +207,22 @@ def test_rejected_write_leaves_the_state_alone(massage_response):
 
 
 @pytest.mark.parametrize(
-    ("args", "foot", "head", "timer", "mode"),
+    ("args", "body", "foot", "head", "timer", "mode"),
     [
-        ((), Speed.LOW, Speed.HIGH, 0, Mode.OFF),
-        ((30, Mode.WAVE), Speed.OFF, Speed.OFF, 30, Mode.WAVE),
+        (
+            (),
+            {"footMassageMotor": Speed.LOW, "headMassageMotor": Speed.HIGH, "massageTimer": 0,
+             "massageWaveMode": Mode.OFF, "side": "R"},
+            Speed.LOW, Speed.HIGH, 0, Mode.OFF,
+        ),
+        (
+            (30, Mode.WAVE),
+            {"massageWaveMode": Mode.WAVE, "massageTimer": 30, "side": "R"},
+            Speed.OFF, Speed.OFF, 30, Mode.WAVE,
+        ),
     ],
 )
-def test_legacy_massage_control_goes_through_the_side_object(massage_response, args, foot, head, timer, mode):
+def test_legacy_massage_control_goes_through_the_side_object(massage_response, args, body, foot, head, timer, mode):
     api = Mock(spec=SleepIQAPI)
     api.check.return_value = True
     api.get.return_value = massage_response
@@ -225,15 +234,52 @@ def test_legacy_massage_control_goes_through_the_side_object(massage_response, a
         await foundation.set_foundation_massage("R", Speed.LOW, Speed.HIGH, *args)
 
     asyncio.run(control())
-    api.put.assert_awaited_once_with(
-        ADJUST_URL,
-        {
-            "footMassageMotor": foot,
-            "headMassageMotor": head,
-            "massageTimer": timer,
-            "massageWaveMode": mode,
-            "side": "R",
-        },
-    )
+    api.put.assert_awaited_once_with(ADJUST_URL, body)
     right = foundation.massages[1]
     assert (right.foot_speed, right.head_speed, right.timer, right.mode) == (foot, head, timer, mode)
+
+
+def test_pattern_write_sends_the_mode_and_timer_without_speeds(massage_response):
+    api = Mock(spec=SleepIQAPI)
+    left = _side(api, massage_response, Side.LEFT)
+    assert left.foot_speed is Speed.LOW
+
+    asyncio.run(left.set_mode(Mode.REVITILIZE, 20))
+
+    api.put.assert_awaited_once_with(
+        ADJUST_URL, {"massageWaveMode": Mode.REVITILIZE, "massageTimer": 20, "side": "L"}
+    )
+    assert (left.mode, left.foot_speed, left.head_speed, left.timer, left.is_on) == (
+        Mode.REVITILIZE, Speed.OFF, Speed.OFF, 20, True
+    )
+
+
+def test_pattern_write_without_a_timer_leaves_the_bed_timer_alone(massage_response):
+    api = Mock(spec=SleepIQAPI)
+    right = _side(api, massage_response)
+
+    asyncio.run(right.set_mode(Mode.WAVE))
+
+    api.put.assert_awaited_once_with(ADJUST_URL, {"massageWaveMode": Mode.WAVE, "side": "R"})
+    assert (right.mode, right.timer) == (Mode.WAVE, 57)
+
+
+def test_pattern_off_sends_only_the_mode(massage_response):
+    api = Mock(spec=SleepIQAPI)
+    right = _side(api, massage_response)
+
+    asyncio.run(right.set_mode(Mode.OFF))
+
+    api.put.assert_awaited_once_with(ADJUST_URL, {"massageWaveMode": Mode.OFF, "side": "R"})
+    assert (right.mode, right.timer, right.is_on) == (Mode.OFF, 0, False)
+
+
+def test_pattern_timer_out_of_range_is_refused_before_any_request(massage_response):
+    api = Mock(spec=SleepIQAPI)
+    right = _side(api, massage_response)
+
+    with pytest.raises(ValueError):
+        asyncio.run(right.set_mode(Mode.SOOTHE, 61))
+
+    api.put.assert_not_awaited()
+    assert right.mode is Mode.SOOTHE and right.timer == 57

@@ -92,6 +92,33 @@ class SleepIQMassage:
         await self._adjust({"massageTimer": timer})
         self.timer = timer
 
+    async def set_mode(self, mode: Mode, timer: int | None = None) -> None:
+        """Start a Full Body pattern, or stop it with Mode.OFF, through the API.
+
+        The request carries the mode and, when given, the timer, and never the
+        motor speeds: a request that also sends both speeds as OFF stops the
+        pattern it starts. Without a timer the bed keeps a running pattern's
+        timer, and a pattern started from idle runs until the bed's own limit.
+        """
+        if mode == Mode.OFF:
+            await self._adjust({"massageWaveMode": mode})
+            self.mode = mode
+            self.timer = 0
+            self.is_on = self.foot_speed != Speed.OFF or self.head_speed != Speed.OFF
+            return
+
+        data: dict[str, Any] = {"massageWaveMode": mode}
+        if timer is not None:
+            self._check_timer(timer)
+            data["massageTimer"] = timer
+        await self._adjust(data)
+        self.mode = mode
+        self.foot_speed = Speed.OFF
+        self.head_speed = Speed.OFF
+        if timer is not None:
+            self.timer = timer
+        self.is_on = True
+
     async def turn_off(self) -> None:
         """Stop both motors through the API."""
         await self.set_speed(Speed.OFF, Speed.OFF, 0)
@@ -99,14 +126,15 @@ class SleepIQMassage:
     async def set_massage(
         self, foot_speed: Speed, head_speed: Speed, timer: int = 0, mode: Mode = Mode.OFF
     ) -> None:
-        """Send speeds, timer and mode in one request.
+        """Set speeds, timer and mode, as SleepIQFoundation.set_foundation_massage does.
 
-        This is the request SleepIQFoundation.set_foundation_massage has always
-        sent. A mode other than OFF turns both speeds off.
+        A mode other than OFF starts that pattern through set_mode and ignores
+        the speeds. Otherwise this sends the request set_foundation_massage has
+        always sent.
         """
         if mode != Mode.OFF:
-            foot_speed = Speed.OFF
-            head_speed = Speed.OFF
+            await self.set_mode(mode, timer)
+            return
 
         await self._adjust(
             {
@@ -120,7 +148,7 @@ class SleepIQMassage:
         self.head_speed = head_speed
         self.timer = timer
         self.mode = mode
-        self.is_on = mode != Mode.OFF or foot_speed != Speed.OFF or head_speed != Speed.OFF
+        self.is_on = foot_speed != Speed.OFF or head_speed != Speed.OFF
 
     async def _adjust(self, data: dict[str, Any]) -> None:
         """Send a partial adjustment for this side, as the SleepIQ app does."""
