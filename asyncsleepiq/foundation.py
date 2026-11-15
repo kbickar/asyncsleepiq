@@ -99,7 +99,10 @@ class SleepIQFoundation:
         if self.features["hasMassageAndLight"] and await self._api.check(
             f"bed/{self.bed_id}/foundation/massage"
         ):
-            self.massages = [SleepIQMassage(Side.LEFT), SleepIQMassage(Side.RIGHT)]
+            self.massages = [
+                SleepIQMassage(self._api, self.bed_id, Side.LEFT),
+                SleepIQMassage(self._api, self.bed_id, Side.RIGHT),
+            ]
             await self.update_massages()
         else:
             self.massages = []
@@ -210,6 +213,11 @@ class SleepIQFoundation:
         self, side: str, foot_speed: Speed, head_speed: Speed, timer: int = 0, mode: Mode = Mode.OFF
     ) -> None:
         """Set massage mode."""
+        for massage in self.massages:
+            if massage.side == side:
+                await massage.set_massage(foot_speed, head_speed, timer, mode)
+                return
+
         if mode != Mode.OFF:
             foot_speed = Speed.OFF
             head_speed = Speed.OFF
