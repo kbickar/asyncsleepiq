@@ -50,7 +50,10 @@ class SleepIQMassage:
         if not isinstance(side_data, dict):
             return
 
-        self.is_on = side_data.get("massageMotorStatus") == 1
+        # massageMotorStatus is a bit field: 1 head motor, 2 foot motor (both
+        # while a pattern runs), 4 the cool-down after a long run.
+        status = side_data.get("massageMotorStatus")
+        self.is_on = type(status) is int and status & 3 != 0
         self.foot_speed = _speed(side_data.get("footMassageMotorSpeed"))
         self.head_speed = _speed(side_data.get("headMassageMotorSpeed"))
         self.mode = _mode(side_data.get("waveMode"))
